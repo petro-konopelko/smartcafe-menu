@@ -1,0 +1,27 @@
+# SmartCafe Menu Service - Code Owners
+# These owners will be automatically requested for review when someone opens a pull request
+
+# Global owners for all files
+* @petro-konopelko
+
+# Domain layer - business logic owners
+/src/SmartCafe.Menu.Domain/ @petro-konopelko
+
+# Application layer - use cases and DTOs
+/src/SmartCafe.Menu.Application/ @petro-konopelko
+
+# Infrastructure layer - database and external services
+/src/SmartCafe.Menu.Infrastructure/ @petro-konopelko
+
+# API layer - endpoints
+/src/SmartCafe.Menu.API/ @petro-konopelko
+
+# Tests
+/tests/ @petro-konopelko
+
+# CI/CD and DevOps
+/.github/ @petro-konopelko
+/Dockerfile @petro-konopelko
+
+# Documentation
+*.md @petro-konopelko

@@ -57,6 +57,7 @@ src/
 - Always include correlation IDs for request tracking
 - Use C# 14 features (primary constructors, collection expressions, etc.)
 - Treat warnings as errors
+- Language version should be latest
 
 ### Naming Conventions
 - Use PascalCase for classes, methods, properties
