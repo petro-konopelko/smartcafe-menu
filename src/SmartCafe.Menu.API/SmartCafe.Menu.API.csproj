@@ -8,11 +8,12 @@
     <ProjectReference Include="..\SmartCafe.Menu.Domain\SmartCafe.Menu.Domain.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.Application\SmartCafe.Menu.Application.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.Infrastructure\SmartCafe.Menu.Infrastructure.csproj" />
+    <ProjectReference Include="..\SmartCafe.Menu.ServiceDefaults\SmartCafe.Menu.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Azure.Identity" />

@@ -67,7 +67,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore SmartCafe.Menu.sln
+      run: dotnet restore SmartCafe.Menu.slnx
 
     - name: Run security scan
       run: |

@@ -22,7 +22,7 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         // Database
-        var connectionString = BuildPostgreSqlConnectionString(configuration);
+        var connectionString = configuration.GetConnectionString("Menus");
         services.AddDbContext<MenuDbContext>(options => options.UseNpgsql(connectionString));
 
         // Repositories and UoW
@@ -58,20 +58,5 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventPublisher>(sp => sp.GetRequiredService<ServiceBusEventPublisher>());
 
         return services;
-    }
-
-    private static string BuildPostgreSqlConnectionString(IConfiguration configuration)
-    {
-        var host = configuration["Database:Host"] ?? "localhost";
-        var port = configuration["Database:Port"] ?? "5432";
-        var database = configuration["Database:Name"] ?? "smartcafe_menu";
-        var username = configuration["Database:Username"] ?? "postgres";
-
-        var password = configuration["Database:Password"]
-            ?? configuration["ConnectionStrings:PostgreSQL:Password"]
-            ?? Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
-            ?? throw new InvalidOperationException("Database password not configured");
-
-        return $"Host={host};Port={port};Database={database};Username={username};Password={password};Include Error Detail=true";
     }
 }

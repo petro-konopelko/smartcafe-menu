@@ -12,6 +12,7 @@ using SmartCafe.Menu.Domain.Services;
 using SmartCafe.Menu.API.Middleware;
 using SmartCafe.Menu.API.Endpoints.Menus;
 using SmartCafe.Menu.API.Endpoints.Images;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Configure secrets (Key Vault in production, User Secrets in dev)
-if (builder.Environment.IsProduction())
+if (!builder.Environment.IsDevelopment())
 {
     var keyVaultUri = builder.Configuration["KeyVault:Uri"];
     if (!string.IsNullOrEmpty(keyVaultUri))
@@ -50,31 +51,29 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Add API services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
+builder.AddServiceDefaults();
 
 var app = builder.Build();
 
 // Configure middleware pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
 
 // Map API endpoints
 var api = app.MapGroup("/api");
