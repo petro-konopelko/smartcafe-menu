@@ -19,6 +19,8 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Development"); // Enable OpenAPI/Scalar endpoints
+        
         builder.ConfigureServices(services =>
         {
             // Remove the existing DbContext registration

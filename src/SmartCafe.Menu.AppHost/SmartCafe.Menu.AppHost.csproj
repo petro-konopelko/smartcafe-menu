@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.0.0" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <UserSecretsId>95a155cd-7439-4114-b321-cde0cd97c425</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SmartCafe.Menu.ServiceDefaults\SmartCafe.Menu.ServiceDefaults.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.API\SmartCafe.Menu.API.csproj" />
   </ItemGroup>
 

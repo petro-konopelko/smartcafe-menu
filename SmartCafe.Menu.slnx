@@ -1,0 +1,19 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/SmartCafe.Menu.API/SmartCafe.Menu.API.csproj" />
+    <Project Path="src/SmartCafe.Menu.AppHost/SmartCafe.Menu.AppHost.csproj" />
+    <Project Path="src/SmartCafe.Menu.Application/SmartCafe.Menu.Application.csproj" />
+    <Project Path="src/SmartCafe.Menu.Domain/SmartCafe.Menu.Domain.csproj" />
+    <Project Path="src/SmartCafe.Menu.Infrastructure/SmartCafe.Menu.Infrastructure.csproj" />
+    <Project Path="src/SmartCafe.Menu.ServiceDefaults/SmartCafe.Menu.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmartCafe.Menu.IntegrationTests/SmartCafe.Menu.IntegrationTests.csproj" />
+    <Project Path="tests/SmartCafe.Menu.UnitTests/SmartCafe.Menu.UnitTests.csproj" />
+  </Folder>
+</Solution>

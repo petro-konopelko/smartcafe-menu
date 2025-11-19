@@ -39,20 +39,16 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore SmartCafe.Menu.sln
+      run: dotnet restore SmartCafe.Menu.slnx
 
     - name: Build solution
-      run: dotnet build SmartCafe.Menu.sln --configuration Release --no-restore
+      run: dotnet build SmartCafe.Menu.slnx --configuration Release --no-restore
 
     - name: Run tests with coverage
       env:
-        Database__Host: localhost
-        Database__Port: 5432
-        Database__Name: smartcafe_menu_test
-        Database__Username: postgres
-        Database__Password: postgres
+        ConnectionStrings__Menus: "Host=localhost;Port=5432;Database=smartcafe_menu_test;Username=postgres;Password=postgres"
       run: |
-        dotnet test SmartCafe.Menu.sln \
+        dotnet test SmartCafe.Menu.slnx \
           --configuration Release \
           --no-build \
           --verbosity normal \
