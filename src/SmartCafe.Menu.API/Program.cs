@@ -41,13 +41,20 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Register handlers (Application layer) - only implemented handlers
+// Register handlers (Application layer)
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.CreateMenu.CreateMenuHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.UpdateMenu.UpdateMenuHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.CloneMenu.CloneMenuHandler>();
 builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.GetMenu.GetMenuHandler>();
 builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.GetActiveMenu.GetActiveMenuHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.ListMenus.ListMenusHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.PublishMenu.PublishMenuHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.ActivateMenu.ActivateMenuHandler>();
+builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Menus.DeleteMenu.DeleteMenuHandler>();
 builder.Services.AddScoped<SmartCafe.Menu.Application.Features.Images.UploadImage.UploadImageHandler>();
 
-// Register validators
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+// Register validators from Application assembly
+builder.Services.AddValidatorsFromAssemblyContaining<SmartCafe.Menu.Application.Features.Menus.CreateMenu.CreateMenuRequestValidator>();
 
 // Add API services
 builder.Services.AddEndpointsApiExplorer();
@@ -82,8 +89,18 @@ var api = app.MapGroup("/api");
 var cafes = api.MapGroup("/cafes/{cafeId:guid}");
 var menus = cafes.MapGroup("/menus");
 
-menus.MapGetMenu();
-menus.MapGetActiveMenu();
+// CRUD operations
+menus.MapCreateMenu();          // POST /api/cafes/{cafeId}/menus
+menus.MapUpdateMenu();          // PUT /api/cafes/{cafeId}/menus/{menuId}
+menus.MapGetMenu();             // GET /api/cafes/{cafeId}/menus/{menuId}
+menus.MapListMenus();           // GET /api/cafes/{cafeId}/menus
+menus.MapDeleteMenu();          // DELETE /api/cafes/{cafeId}/menus/{menuId}
+
+// Menu operations
+menus.MapCloneMenu();           // POST /api/cafes/{cafeId}/menus/{menuId}/clone
+menus.MapPublishMenu();         // POST /api/cafes/{cafeId}/menus/{menuId}/publish
+menus.MapActivateMenu();        // POST /api/cafes/{cafeId}/menus/{menuId}/activate
+menus.MapGetActiveMenu();       // GET /api/cafes/{cafeId}/menus/active
 
 // Image upload endpoints
 var images = api.MapGroup("/images");

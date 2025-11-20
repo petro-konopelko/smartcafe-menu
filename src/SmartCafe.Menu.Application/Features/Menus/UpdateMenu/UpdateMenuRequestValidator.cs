@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using SmartCafe.Menu.Application.Features.Menus.Shared;
 
-namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
+namespace SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
 
-public class CreateMenuRequestValidator : AbstractValidator<CreateMenuRequest>
+public class UpdateMenuRequestValidator : AbstractValidator<UpdateMenuRequest>
 {
-    public CreateMenuRequestValidator()
+    public UpdateMenuRequestValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Menu name is required")
