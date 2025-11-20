@@ -16,7 +16,7 @@ public record ActiveMenuSectionDto(
 
 public record ActiveMenuItemDto(
     string Name,
-    string Description,
+    string? Description,
     decimal Price,
     string? ImageBigUrl,
     string? ImageCroppedUrl,

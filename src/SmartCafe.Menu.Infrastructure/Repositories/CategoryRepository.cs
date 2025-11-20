@@ -13,6 +13,15 @@ public class CategoryRepository(MenuDbContext context, IDateTimeProvider dateTim
         return await context.Categories.FindAsync([categoryId], cancellationToken);
     }
 
+    public async Task<List<Category>> GetByIdsAsync(IEnumerable<Guid> categoryIds, CancellationToken cancellationToken = default)
+    {
+        // Convert to HashSet for O(1) Contains performance
+        var categoryIdSet = categoryIds.ToHashSet();
+        return await context.Categories
+            .Where(c => categoryIdSet.Contains(c.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<Category>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await context.Categories

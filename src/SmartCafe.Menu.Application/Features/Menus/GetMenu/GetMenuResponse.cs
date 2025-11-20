@@ -22,7 +22,7 @@ public record MenuSectionDto(
 public record MenuItemDto(
     Guid ItemId,
     string Name,
-    string Description,
+    string? Description,
     decimal Price,
     string? ImageBigUrl,
     string? ImageCroppedUrl,

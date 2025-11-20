@@ -12,9 +12,7 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
         .WithImage("postgres:16")
-        .WithDatabase("smartcafe_menu_test")
-        .WithUsername("test")
-        .WithPassword("test")
+        .WithDatabase("MenusTestDb")
         .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
