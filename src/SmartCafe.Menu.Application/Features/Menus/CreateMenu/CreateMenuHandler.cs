@@ -1,9 +1,8 @@
-using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Features.Menus.Shared;
+using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
-using SmartCafe.Menu.Domain.ValueObjects;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 
@@ -78,7 +77,7 @@ public class CreateMenuHandler(
 
         var foundCategories = await categoryRepository.GetByIdsAsync(allCategoryIds, cancellationToken);
         var missingCategoryIds = allCategoryIds.Except(foundCategories.Select(c => c.Id)).ToList();
-        
+
         if (missingCategoryIds.Any())
         {
             throw new InvalidOperationException($"Categories not found: {string.Join(", ", missingCategoryIds)}");

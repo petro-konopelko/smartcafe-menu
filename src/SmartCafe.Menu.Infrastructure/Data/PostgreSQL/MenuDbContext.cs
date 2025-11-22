@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCafe.Menu.Domain.Entities;
-using System.Text.Json;
 
 namespace SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 

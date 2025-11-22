@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using SmartCafe.Menu.Application.Features.Menus.Shared;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;

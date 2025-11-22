@@ -8,7 +8,7 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
     public void Configure(EntityTypeBuilder<Domain.Entities.Menu> builder)
     {
         builder.HasKey(e => e.Id);
-        
+
         builder.Property(e => e.Id)
             .ValueGeneratedNever(); // Generated via Guid.CreateVersion7() in code
 

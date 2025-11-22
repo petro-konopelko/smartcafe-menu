@@ -44,7 +44,7 @@ public class UpdateMenuHandler(
 
         // Capture timestamp once for consistency across all updates
         var now = dateTimeProvider.UtcNow;
-        
+
         // Build menu structure with preserved existing data
         var updatedMenu = new Domain.Entities.Menu
         {
@@ -96,7 +96,7 @@ public class UpdateMenuHandler(
 
         var foundCategories = await categoryRepository.GetByIdsAsync(categoryIds, cancellationToken);
         var missingCategoryIds = categoryIds.Except(foundCategories.Select(c => c.Id)).ToList();
-        
+
         if (missingCategoryIds.Any())
         {
             throw new InvalidOperationException($"Categories not found: {string.Join(", ", missingCategoryIds)}");
@@ -120,8 +120,8 @@ public class UpdateMenuHandler(
             // Use existing ID if provided, otherwise create new (for new sections)
             var sectionId = sectionDto.Id ?? Guid.CreateVersion7();
             var isExistingSection = sectionDto.Id.HasValue && existingSections.ContainsKey(sectionDto.Id.Value);
-            
-            var section = new Domain.Entities.Section
+
+            var section = new Section
             {
                 Id = sectionId,
                 MenuId = updatedMenu.Id,
@@ -139,7 +139,7 @@ public class UpdateMenuHandler(
                 var itemId = itemDto.Id ?? Guid.CreateVersion7();
                 var isExistingItem = itemDto.Id.HasValue && existingItems.ContainsKey(itemDto.Id.Value);
                 var existingItem = isExistingItem ? existingItems[itemId] : null;
-                
+
                 var item = new MenuItem
                 {
                     Id = itemId,

@@ -1,7 +1,7 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SmartCafe.Menu.Domain.Entities;
-using System.Text.Json;
 
 namespace SmartCafe.Menu.Infrastructure.Data.PostgreSQL.Configurations;
 
@@ -10,7 +10,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
     public void Configure(EntityTypeBuilder<MenuItem> builder)
     {
         builder.HasKey(e => e.Id);
-        
+
         builder.Property(e => e.Id)
             .ValueGeneratedNever();
 

@@ -1,9 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using SmartCafe.Menu.Application.Interfaces;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace SmartCafe.Menu.Infrastructure.BlobStorage;
 
@@ -23,7 +20,7 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
 
         // Normalize extension
         var ext = fileExtension.StartsWith('.') ? fileExtension : $".{fileExtension}";
-        
+
         // Create folder path: cafeId/menuId/itemId/
         var folderPath = $"{cafeId}/{menuId}/{itemId}";
         var fullImageName = $"{folderPath}/full{ext}";
@@ -72,7 +69,7 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
         await _containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
         var blobClient = _containerClient.GetBlobClient(fileName);
-        
+
         await blobClient.UploadAsync(
             imageStream,
             new BlobHttpHeaders { ContentType = GetContentType(fileName) },

@@ -9,7 +9,7 @@ public class SectionConfiguration : IEntityTypeConfiguration<Section>
     public void Configure(EntityTypeBuilder<Section> builder)
     {
         builder.HasKey(e => e.Id);
-        
+
         builder.Property(e => e.Id)
             .ValueGeneratedNever();
 

@@ -12,7 +12,7 @@ public static class GetActiveMenuEndpoint
             CancellationToken ct) =>
         {
             var result = await handler.HandleAsync(cafeId, ct);
-            
+
             if (result == null)
             {
                 return Results.NotFound(new { message = "No active menu found for this cafe" });

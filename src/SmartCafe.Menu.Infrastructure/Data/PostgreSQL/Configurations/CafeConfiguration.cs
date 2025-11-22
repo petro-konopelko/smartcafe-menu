@@ -8,7 +8,7 @@ public class CafeConfiguration : IEntityTypeConfiguration<Domain.Entities.Cafe>
     public void Configure(EntityTypeBuilder<Domain.Entities.Cafe> builder)
     {
         builder.HasKey(e => e.Id);
-        
+
         builder.Property(e => e.Id)
             .ValueGeneratedNever(); // Generated via Guid.CreateVersion7() in code
 

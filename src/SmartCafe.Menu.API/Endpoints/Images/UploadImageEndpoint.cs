@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using SmartCafe.Menu.Application.Features.Images.UploadImage;
 
 namespace SmartCafe.Menu.API.Endpoints.Images;
@@ -17,7 +16,7 @@ public static class UploadImageEndpoint
         {
             // Read form data
             var form = await request.ReadFormAsync(ct);
-            
+
             if (!form.Files.Any())
             {
                 return Results.BadRequest(new { Message = "No image file provided" });
