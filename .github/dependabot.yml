@@ -18,7 +18,7 @@ updates:
       - "petro-konopelko"
     assignees:
       - "petro-konopelko"
-    versioning-strategy: increase
+    versioning-strategy: increase-if-necessary
     groups:
       # Group Microsoft packages together
       microsoft:
