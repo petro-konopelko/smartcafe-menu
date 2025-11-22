@@ -1,10 +1,16 @@
-name: PR Validation
+name: Pull Request
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ main ]
 
 jobs:
+  # Build and test the code
+  build-and-test:
+    name: Build and Test
+    uses: ./.github/workflows/build-and-test-template.yaml
+
+  # Validate PR metadata
   validate:
     name: Validate PR
     runs-on: ubuntu-latest
@@ -32,12 +38,6 @@ jobs:
           revert
         requireScope: false
 
-    - name: Check for merge conflicts
-      uses: eps1lon/actions-label-merge-conflict@v3
-      with:
-        dirtyLabel: "merge-conflict"
-        repoToken: "${{ secrets.GITHUB_TOKEN }}"
-
     - name: Label PR size
       uses: codelytv/pr-size-labeler@v1
       with:
@@ -53,8 +53,14 @@ jobs:
         xl_label: 'size/xl'
         fail_if_xl: false
 
-  security-scan:
+  # Security scanning
+  security:
     name: Security Scan
+    uses: ./.github/workflows/security-template.yaml
+
+  # Code quality checks
+  code-quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     
     steps:
@@ -69,20 +75,5 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore SmartCafe.Menu.slnx
 
-    - name: Run security scan
-      run: |
-        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
-        if grep -q "has the following vulnerable packages" vulnerable.txt; then
-          echo "❌ Vulnerable packages detected"
-          cat vulnerable.txt
-          exit 1
-        fi
-        echo "✅ No vulnerable packages detected"
-
-    - name: Check for secrets
-      uses: trufflesecurity/trufflehog@main
-      with:
-        path: ./
-        base: ${{ github.event.repository.default_branch }}
-        head: HEAD
-        extra_args: --only-verified
+    - name: Check code formatting
+      run: dotnet format SmartCafe.Menu.slnx --verify-no-changes --verbosity diagnostic

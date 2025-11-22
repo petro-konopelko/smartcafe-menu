@@ -320,3 +320,7 @@ smartcafe-menu-service/
   - Testcontainers.PostgreSQL
   - Microsoft.AspNetCore.Mvc.Testing (WebApplicationFactory)
 
+## GitHub Actions
+- Use GitHub Actions for CI/CD pipelines
+- always use yaml files for defining workflows with .yaml extension
+

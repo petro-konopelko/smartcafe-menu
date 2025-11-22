@@ -1,0 +1,42 @@
+name: Security Scan (Reusable)
+
+# Reusable workflow for security scanning
+# Checks for vulnerable packages and leaked secrets
+
+on:
+  workflow_call:
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore SmartCafe.Menu.slnx
+
+    - name: Scan for vulnerable packages
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+        if grep -q "has the following vulnerable packages" vulnerable.txt; then
+          echo "❌ Vulnerable packages detected"
+          cat vulnerable.txt
+          exit 1
+        fi
+        echo "✅ No vulnerable packages detected"
+
+    - name: Scan for leaked secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --only-verified

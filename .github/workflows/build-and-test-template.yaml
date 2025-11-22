@@ -1,0 +1,63 @@
+name: Build and Test (Reusable)
+
+# Reusable workflow - single job to avoid artifact overhead
+# Checkout once, build once, test in sequence
+
+on:
+  workflow_call:
+    inputs:
+      test-results-artifact-name:
+        description: 'Name for the test results artifact'
+        required: false
+        type: string
+        default: 'test-results'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore SmartCafe.Menu.slnx
+
+    - name: Build solution
+      run: dotnet build SmartCafe.Menu.slnx --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+    - name: Run unit tests
+      run: |
+        dotnet test tests/SmartCafe.Menu.UnitTests/SmartCafe.Menu.UnitTests.csproj \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=unit-test-results.trx"
+
+    - name: Run integration tests
+      run: |
+        dotnet test tests/SmartCafe.Menu.IntegrationTests/SmartCafe.Menu.IntegrationTests.csproj \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-build \
+          --verbosity normal \
+          --logger "trx;LogFileName=integration-test-results.trx"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ inputs.test-results-artifact-name }}
+        path: '**/*.trx'
+        retention-days: 7

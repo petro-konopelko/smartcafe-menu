@@ -17,31 +17,27 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Development"); // Enable OpenAPI/Scalar endpoints
+        builder.UseEnvironment("Development");
 
         builder.ConfigureServices(services =>
         {
-            // Remove the existing DbContext registration
-            services.RemoveAll(typeof(DbContextOptions<MenuDbContext>));
-            services.RemoveAll(typeof(MenuDbContext));
+            // Remove all DbContext registrations safely
+            services.RemoveAll<DbContextOptions<MenuDbContext>>();
+            services.RemoveAll<MenuDbContext>();
 
-            // Add test database
-            services.AddDbContext<MenuDbContext>(options =>
-            {
-                options.UseNpgsql(_dbContainer.GetConnectionString());
-            });
-
-            // Build service provider to create DB
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
-            db.Database.Migrate();
+            // Register test DB
+            services.AddDbContext<MenuDbContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
         });
     }
 
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+
+        await db.Database.MigrateAsync();
     }
 
     public new async Task DisposeAsync()
