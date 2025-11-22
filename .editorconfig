@@ -136,3 +136,7 @@ dotnet_diagnostic.CA1062.severity = none
 
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = true:suggestion
+
+# Exclude auto-generated EF Core migrations from code style rules
+[**/Migrations/*.cs]
+generated_code = true
