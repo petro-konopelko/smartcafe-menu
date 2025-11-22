@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.Application.Features.Menus.CloneMenu;
 using SmartCafe.Menu.Domain.Exceptions;

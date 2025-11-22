@@ -1,18 +1,13 @@
-using Microsoft.EntityFrameworkCore;
 using Azure.Identity;
 using FluentValidation;
-using Serilog;
-using SmartCafe.Menu.Application.Interfaces;
-using SmartCafe.Menu.Domain.Interfaces;
-using SmartCafe.Menu.Infrastructure.Data;
-using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
-using SmartCafe.Menu.Infrastructure.DependencyInjection;
-using SmartCafe.Menu.Infrastructure.Services;
-using SmartCafe.Menu.Domain.Services;
-using SmartCafe.Menu.API.Middleware;
-using SmartCafe.Menu.API.Endpoints.Menus;
-using SmartCafe.Menu.API.Endpoints.Images;
 using Scalar.AspNetCore;
+using Serilog;
+using SmartCafe.Menu.API.Endpoints.Images;
+using SmartCafe.Menu.API.Endpoints.Menus;
+using SmartCafe.Menu.API.Middleware;
+using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Domain.Services;
+using SmartCafe.Menu.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 

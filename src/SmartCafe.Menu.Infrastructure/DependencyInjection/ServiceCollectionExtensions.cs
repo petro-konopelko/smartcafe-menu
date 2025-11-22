@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SmartCafe.Menu.Application.Interfaces;
-using SmartCafe.Menu.Domain.Interfaces;
 using SmartCafe.Menu.Infrastructure.BlobStorage;
 using SmartCafe.Menu.Infrastructure.Data;
 using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;

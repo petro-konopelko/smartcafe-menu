@@ -9,13 +9,13 @@ namespace SmartCafe.Menu.UnitTests.Fakes;
 public class FakeDateTimeProvider : IDateTimeProvider
 {
     private DateTime _utcNow = DateTime.UtcNow;
-    
+
     public DateTime UtcNow => _utcNow;
     public DateTime Now => _utcNow.ToLocalTime();
     public DateTime Today => _utcNow.Date;
     public DateTimeOffset UtcNowOffset => new DateTimeOffset(_utcNow);
     public DateTimeOffset NowOffset => new DateTimeOffset(_utcNow.ToLocalTime());
-    
+
     /// <summary>
     /// Set the current UTC time for testing
     /// </summary>
@@ -23,7 +23,7 @@ public class FakeDateTimeProvider : IDateTimeProvider
     {
         _utcNow = DateTime.SpecifyKind(utcNow, DateTimeKind.Utc);
     }
-    
+
     /// <summary>
     /// Reset to actual current time
     /// </summary>

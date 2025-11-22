@@ -1,4 +1,4 @@
-﻿namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
+namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 
 public record CreateMenuResponse(
     Guid Id,

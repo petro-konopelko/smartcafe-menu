@@ -1,7 +1,7 @@
-using SmartCafe.Menu.Application.Interfaces;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using SmartCafe.Menu.Application.Interfaces;
 
 namespace SmartCafe.Menu.Infrastructure.Services;
 
@@ -13,7 +13,7 @@ public class ImageProcessingService : IImageProcessor
     public async Task<Stream> CreateCroppedImageAsync(Stream originalImage, int width, int height, CancellationToken cancellationToken = default)
     {
         using var image = await Image.LoadAsync(originalImage, cancellationToken);
-        
+
         image.Mutate(x => x.Resize(new ResizeOptions
         {
             Size = new Size(width, height),
@@ -23,7 +23,7 @@ public class ImageProcessingService : IImageProcessor
         var outputStream = new MemoryStream();
         await image.SaveAsync(outputStream, new JpegEncoder(), cancellationToken);
         outputStream.Position = 0;
-        
+
         return outputStream;
     }
 

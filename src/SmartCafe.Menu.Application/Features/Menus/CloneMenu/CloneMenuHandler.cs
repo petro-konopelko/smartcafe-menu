@@ -77,7 +77,7 @@ public class CloneMenuHandler(
     {
         foreach (var sourceSection in sourceMenu.Sections)
         {
-            var clonedSection = new Domain.Entities.Section
+            var clonedSection = new Section
             {
                 Id = Guid.CreateVersion7(),
                 MenuId = clonedMenu.Id,

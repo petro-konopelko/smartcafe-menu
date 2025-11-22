@@ -38,7 +38,7 @@ public class MenuRepository(MenuDbContext context, IDateTimeProvider dateTimePro
     public async Task<Domain.Entities.Menu> CreateAsync(Domain.Entities.Menu menu, CancellationToken cancellationToken = default)
     {
         var now = dateTimeProvider.UtcNow;
-        
+
         // Set timestamps using IDateTimeProvider via reflection since properties are init-only
         menu.GetType().GetProperty(nameof(Domain.Entities.Menu.CreatedAt))!.SetValue(menu, now);
         menu.GetType().GetProperty(nameof(Domain.Entities.Menu.UpdatedAt))!.SetValue(menu, now);
