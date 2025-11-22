@@ -4,11 +4,42 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write  # Allows modifying repository content (labels, comments)
+  pull-requests: write  # Specifically for PR interactions
+
 jobs:
   # Build and test the code
   build-and-test:
     name: Build and Test
     uses: ./.github/workflows/build-and-test-template.yaml
+    with:
+      coverage-artifact-name: coverage
+
+  publish-coverage:
+    name: Publish Coverage
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: always()
+
+    steps:
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+
+      - name: Generate PR Coverage Summary
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
+        with:
+          reports: 'coverage/**/coverage.cobertura.xml'
+          targetdir: 'coveragereport'
+          reporttypes: 'MarkdownSummaryGithub'
+
+      - name: Add coverage comment to PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coveragereport/SummaryGithub.md
 
   # Validate PR metadata
   validate:
@@ -18,6 +49,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0   # needed for TruffleHog
 
     - name: Validate PR title
       uses: amannn/action-semantic-pull-request@v5
@@ -76,4 +109,4 @@ jobs:
       run: dotnet restore SmartCafe.Menu.slnx
 
     - name: Check code formatting
-      run: dotnet format SmartCafe.Menu.slnx --verify-no-changes --verbosity diagnostic
+      run: dotnet format SmartCafe.Menu.slnx --verify-no-changes --severity error

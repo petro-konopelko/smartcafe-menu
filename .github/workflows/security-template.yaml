@@ -35,6 +35,7 @@ jobs:
 
     - name: Scan for leaked secrets
       uses: trufflesecurity/trufflehog@main
+      if: github.event_name == 'pull_request'
       with:
         path: ./
         base: ${{ github.event.repository.default_branch }}
