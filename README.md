@@ -1,7 +1,6 @@
 # SmartCafe Menu Service
 
 [![CI](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/ci.yaml/badge.svg)](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/ci.yaml)
-[![Code Coverage](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/coverage.yaml/badge.svg)](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/coverage.yaml)
 [![PR](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/pr.yaml/badge.svg)](https://github.com/petro-konopelko/smartcafe-menu/actions/workflows/pr.yaml)
 
 A .NET 10 microservice for managing digital menus in the SmartCafe smart ordering system. Built with Clean Architecture, PostgreSQL, and Azure services.

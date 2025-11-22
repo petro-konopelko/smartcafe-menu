@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Build and test the code
   build-and-test:
@@ -11,28 +15,53 @@ jobs:
     uses: ./.github/workflows/build-and-test-template.yaml
     with:
       test-results-artifact-name: test-results
+      coverage-artifact-name: coverage
 
-  # Publish test results
-  publish-test-results:
-    name: Publish Test Results
+  # Publish coverage report
+  publish-coverage:
+    name: Publish Coverage Report
     runs-on: ubuntu-latest
     needs: build-and-test
     if: always()
     
     steps:
-    - name: Download test results
+    - name: Download coverage artifacts
       uses: actions/download-artifact@v4
       with:
-        name: test-results
-        path: test-results
+        name: coverage
+        path: coverage
 
-    - name: Publish test report
-      uses: dorny/test-reporter@v1
+    - name: Generate Coverage Report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.2.0
       with:
-        name: Test Results
-        path: 'test-results/**/*.trx'
-        reporter: dotnet-trx
-        fail-on-error: true
+        reports: 'coverage/**/coverage.cobertura.xml'
+        targetdir: 'coveragereport'
+        reporttypes: 'Html;MarkdownSummary;TextSummary'
+    
+    - name: Check coverage threshold
+      shell: bash
+      run: |
+        if [ ! -f coveragereport/Summary.txt ]; then
+          echo "❌ Coverage summary file not found"
+          exit 1
+        fi
+        COVERAGE=$(grep -oP 'Line coverage: \K[0-9.]+' coveragereport/Summary.txt || echo "0")
+        echo "Coverage: $COVERAGE%"
+        if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+          echo "❌ Coverage is below 70% threshold"
+          exit 1
+        fi
+        echo "✅ Coverage meets threshold"
+    
+    - name: Upload coverage HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-html
+        path: coveragereport
+        retention-days: 30
+
+    - name: Display coverage summary
+      run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
 
   # Security scanning
   security:

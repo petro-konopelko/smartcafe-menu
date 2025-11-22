@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'test-results'
+      coverage-artifact-name:
+        description: 'Name for the coverage artifact'
+        required: false
+        type: string
+        default: 'coverage'
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -32,6 +37,14 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: nuget-${{ hashFiles('**/*.csproj', '**/*.slnx', '**/Directory.Build.props', '**/Directory.Packages.props') }}
+        restore-keys: |
+          nuget-
+
     - name: Restore dependencies
       run: dotnet restore SmartCafe.Menu.slnx
 
@@ -44,7 +57,8 @@ jobs:
           --configuration ${{ env.BUILD_CONFIGURATION }} \
           --no-build \
           --verbosity normal \
-          --logger "trx;LogFileName=unit-test-results.trx"
+          --logger "trx;LogFileName=unit-test-results.trx" \
+          --collect:"XPlat Code Coverage" --results-directory ./TestResults/UnitTests
 
     - name: Run integration tests
       run: |
@@ -52,12 +66,21 @@ jobs:
           --configuration ${{ env.BUILD_CONFIGURATION }} \
           --no-build \
           --verbosity normal \
-          --logger "trx;LogFileName=integration-test-results.trx"
+          --logger "trx;LogFileName=integration-test-results.trx" \
+          --collect:"XPlat Code Coverage" --results-directory ./TestResults/IntegrationTests
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: ${{ inputs.test-results-artifact-name }}
-        path: '**/*.trx'
+        path: '**/TestResults/**/*.trx'
+        retention-days: 7
+    
+    - name: Upload coverage results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ inputs.coverage-artifact-name }}
+        path: '**/coverage.cobertura.xml'
         retention-days: 7
