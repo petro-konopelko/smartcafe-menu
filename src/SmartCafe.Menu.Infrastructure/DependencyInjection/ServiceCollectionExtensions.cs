@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         // Database
-        var connectionString = configuration.GetConnectionString("Menus");
+        var connectionString = configuration.GetConnectionString("MenuDb");
         services.AddDbContext<MenuDbContext>(options => options.UseNpgsql(connectionString));
 
         // Repositories and UoW

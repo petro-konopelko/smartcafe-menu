@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 // Add PostgreSQL
 var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin()
-    .AddDatabase("Menus");
+    .AddDatabase("MenuDb");
 
 // Add Azure Storage emulator (Azurite)
 var storage = builder.AddAzureStorage("storage")

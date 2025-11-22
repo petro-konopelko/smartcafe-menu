@@ -58,9 +58,6 @@ artifacts/
 *.snupkg
 **/packages/*
 
-# Entity Framework Core Migrations
-**/Migrations/*.Designer.cs
-
 # Test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*

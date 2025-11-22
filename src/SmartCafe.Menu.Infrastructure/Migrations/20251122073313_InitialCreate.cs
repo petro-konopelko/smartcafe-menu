@@ -98,7 +98,7 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SectionId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     Price = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
                     ImageBigUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     ImageCroppedUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),

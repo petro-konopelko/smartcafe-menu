@@ -21,7 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SmartCafe.Menu.Domain\SmartCafe.Menu.Domain.csproj" />
     <ProjectReference Include="..\..\src\SmartCafe.Menu.Application\SmartCafe.Menu.Application.csproj" />
-    <ProjectReference Include="..\..\src\SmartCafe.Menu.Infrastructure\SmartCafe.Menu.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

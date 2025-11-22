@@ -19,7 +19,6 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
             .HasMaxLength(200);
 
         builder.Property(e => e.Description)
-            .IsRequired()
             .HasMaxLength(500);
 
         builder.Property(e => e.Price)

@@ -6,48 +6,29 @@ labels: enhancement
 assignees: ''
 ---
 
-## Feature Description
-<!-- A clear and concise description of the feature you'd like -->
+## What
+<!-- Clear description of the feature -->
 
-## Problem Statement
-<!-- Describe the problem this feature would solve -->
+## Why
+<!-- What problem does this solve? What value does it add? -->
 
-## Proposed Solution
-<!-- Describe how you envision this feature working -->
-
-## Alternatives Considered
-<!-- Describe alternative solutions or features you've considered -->
+## How
+<!-- How should this work? (optional if you have an idea) -->
 
 ## Use Cases
-<!-- Provide specific use cases for this feature -->
-
 1. 
 2. 
-3. 
 
-## Benefits
-<!-- What are the benefits of implementing this feature? -->
-
-- 
-- 
-- 
-
-## Implementation Considerations
-<!-- Technical considerations for implementing this feature -->
-
-### Affected Components
-- [ ] Domain Layer
-- [ ] Application Layer
-- [ ] Infrastructure Layer
-- [ ] API Layer
+## Affected Components
+<!-- Check all that apply -->
+- [ ] Domain/Business Logic
+- [ ] API Endpoints
 - [ ] Database Schema
 - [ ] Azure Services
+- [ ] Other: 
 
-### Breaking Changes
-- [ ] This would introduce breaking changes
-
-### Dependencies
-<!-- Are there any dependencies or prerequisites? -->
+## Additional Context
+<!-- Mockups, examples from other systems, alternatives considered, etc. -->
 
 ## Priority
 <!-- How important is this feature? -->
