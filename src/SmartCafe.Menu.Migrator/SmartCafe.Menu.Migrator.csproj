@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\SmartCafe.Menu.Infrastructure\SmartCafe.Menu.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
