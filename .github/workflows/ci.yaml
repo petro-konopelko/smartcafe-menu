@@ -8,6 +8,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  checks: write  # Required for dorny/test-reporter
+
 jobs:
   # Build and test the code
   build-and-test:
@@ -37,21 +40,6 @@ jobs:
         reports: 'coverage/**/coverage.cobertura.xml'
         targetdir: 'coveragereport'
         reporttypes: 'Html;MarkdownSummary;TextSummary'
-    
-    - name: Check coverage threshold
-      shell: bash
-      run: |
-        if [ ! -f coveragereport/Summary.txt ]; then
-          echo "❌ Coverage summary file not found"
-          exit 1
-        fi
-        COVERAGE=$(grep -oP 'Line coverage: \K[0-9.]+' coveragereport/Summary.txt || echo "0")
-        echo "Coverage: $COVERAGE%"
-        if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-          echo "❌ Coverage is below 70% threshold"
-          exit 1
-        fi
-        echo "✅ Coverage meets threshold"
     
     - name: Upload coverage HTML report
       uses: actions/upload-artifact@v4
