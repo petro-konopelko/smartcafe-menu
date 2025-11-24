@@ -10,6 +10,7 @@
     <Project Path="src/SmartCafe.Menu.Application/SmartCafe.Menu.Application.csproj" />
     <Project Path="src/SmartCafe.Menu.Domain/SmartCafe.Menu.Domain.csproj" />
     <Project Path="src/SmartCafe.Menu.Infrastructure/SmartCafe.Menu.Infrastructure.csproj" />
+    <Project Path="src/SmartCafe.Menu.Migrator/SmartCafe.Menu.Migrator.csproj" />
     <Project Path="src/SmartCafe.Menu.ServiceDefaults/SmartCafe.Menu.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">

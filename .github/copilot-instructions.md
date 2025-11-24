@@ -31,6 +31,7 @@ This is the **Menu Service** for SmartCafe, a microservices-based smart ordering
 src/
 ├── SmartCafe.Menu.AppHost/              # .NET Aspire orchestration
 ├── SmartCafe.Menu.ServiceDefaults/      # Shared Aspire configuration
+├── SmartCafe.Menu.Migrator/             # Database migration tool for local development
 ├── SmartCafe.Menu.Domain/               # Core business logic and entities
 ├── SmartCafe.Menu.Application/          # Use cases, DTOs, interfaces, validators
 ├── SmartCafe.Menu.Infrastructure/       # Data access (EF Core), Azure services
@@ -54,6 +55,7 @@ src/
 - **Use IDateTimeProvider** instead of DateTime.UtcNow for testability
 - All DateTime values must be in UTC
 - Implement comprehensive logging with Serilog
+- The Serilog should use Two-stage initialization
 - Always include correlation IDs for request tracking
 - Use C# 14 features (primary constructors, collection expressions, etc.)
 - Treat warnings as errors
