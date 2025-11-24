@@ -44,9 +44,11 @@ try
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
-    throw;
+    return 1;
 }
 finally
 {
     Log.CloseAndFlush();
 }
+
+return 0;
