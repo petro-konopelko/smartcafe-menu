@@ -1,7 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add PostgreSQL
-var postgres = builder.AddPostgres("postgres")
+var postgres = builder
+    .AddPostgres("postgres")
+    .WithDataVolume("menu-postgres-data")
     .WithPgAdmin()
     .AddDatabase("MenuDb");
 
