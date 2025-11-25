@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Exceptions;
@@ -11,26 +12,24 @@ public class UpdateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuRequest, UpdateMenuResponse>
 {
 
     public async Task<UpdateMenuResponse> HandleAsync(
-        Guid cafeId,
-        Guid menuId,
         UpdateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
         // Load existing menu
-        var menu = await menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
         if (menu == null)
         {
-            throw new MenuNotFoundException(menuId);
+            throw new MenuNotFoundException(request.MenuId);
         }
 
         // Verify cafe ownership
-        if (menu.CafeId != cafeId)
+        if (menu.CafeId != request.CafeId)
         {
-            throw new MenuNotFoundException(menuId);
+            throw new MenuNotFoundException(request.MenuId);
         }
 
         // Validate all category IDs exist

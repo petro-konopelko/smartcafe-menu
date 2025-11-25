@@ -1,11 +1,9 @@
 using Azure.Identity;
-using FluentValidation;
 using Scalar.AspNetCore;
 using Serilog;
 using SmartCafe.Menu.API.Extensions;
 using SmartCafe.Menu.API.Middleware;
 using SmartCafe.Menu.Application.DependencyInjection;
-using SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 using SmartCafe.Menu.Domain.Interfaces;
 using SmartCafe.Menu.Domain.Services;
 using SmartCafe.Menu.Infrastructure.DependencyInjection;
@@ -44,8 +42,6 @@ try
     // Application and Infrastructure services
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplicationLayer();
-
-    builder.Services.AddValidatorsFromAssemblyContaining<CreateMenuRequestValidator>();
 
     // Add API services
     builder.Services.AddEndpointsApiExplorer();

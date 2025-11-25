@@ -71,6 +71,9 @@ csharp_preserve_single_line_blocks = true
 # Using directive preferences
 csharp_using_directive_placement = outside_namespace:warning
 
+# Using directives ordering
+dotnet_diagnostic.IDE0065.severity = error
+
 # Prefer "var" everywhere
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion

@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -8,16 +9,15 @@ public class PublishMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, PublishMenuResponse>
 {
     public async Task<PublishMenuResponse> HandleAsync(
-        Guid cafeId,
-        Guid menuId,
+        PublishMenuCommand request,
         CancellationToken cancellationToken = default)
     {
-        var menu = await menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != cafeId)
+        if (menu == null || menu.CafeId != request.CafeId)
         {
             throw new InvalidOperationException("Menu not found");
         }
@@ -36,7 +36,7 @@ public class PublishMenuHandler(
         var publishedEvent = new MenuPublishedEvent(
             Guid.CreateVersion7(),
             menu.Id,
-            cafeId,
+            request.CafeId,
             menu.Name,
             dateTimeProvider.UtcNow
         );

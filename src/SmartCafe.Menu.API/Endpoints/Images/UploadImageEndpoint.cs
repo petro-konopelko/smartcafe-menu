@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Features.Images.UploadImage;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Images;
 
@@ -11,7 +12,7 @@ public static class UploadImageEndpoint
     {
         group.MapPost("/upload", async (
             HttpRequest request,
-            UploadImageHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
             // Read form data
@@ -54,7 +55,15 @@ public static class UploadImageEndpoint
 
             // Upload image
             using var stream = imageFile.OpenReadStream();
-            var result = await handler.HandleAsync(cafeId, menuId, itemId, stream, extension, ct);
+            var command = new UploadImageCommand(
+                cafeId,
+                menuId,
+                itemId,
+                stream,
+                imageFile.FileName,
+                imageFile.ContentType
+            );
+            var result = await mediator.Send<UploadImageCommand, UploadImageResponse>(command, ct);
             return Results.Ok(result);
         })
         .WithName("UploadImage")

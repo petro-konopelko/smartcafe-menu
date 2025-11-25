@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -9,12 +10,13 @@ public static class DeleteMenuEndpoint
         group.MapDelete("/{menuId:guid}", async (
             Guid cafeId,
             Guid menuId,
-            DeleteMenuHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
             try
             {
-                await handler.HandleAsync(cafeId, menuId, ct);
+                var command = new DeleteMenuCommand(cafeId, menuId);
+                await mediator.Send<DeleteMenuCommand, DeleteMenuResponse>(command, ct);
                 return Results.NoContent();
             }
             catch (InvalidOperationException ex)

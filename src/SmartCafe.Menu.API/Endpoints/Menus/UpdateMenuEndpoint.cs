@@ -1,6 +1,6 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Exceptions;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
@@ -13,20 +13,13 @@ public static class UpdateMenuEndpoint
             Guid cafeId,
             Guid menuId,
             [FromBody] UpdateMenuRequest request,
-            IValidator<UpdateMenuRequest> validator,
-            UpdateMenuHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
-            // Validate request
-            var validationResult = await validator.ValidateAsync(request, ct);
-            if (!validationResult.IsValid)
-            {
-                return Results.ValidationProblem(validationResult.ToDictionary());
-            }
-
             try
             {
-                var response = await handler.HandleAsync(cafeId, menuId, request, ct);
+                var command = request with { CafeId = cafeId, MenuId = menuId };
+                var response = await mediator.Send<UpdateMenuRequest, UpdateMenuResponse>(command, ct);
                 return Results.Ok(response);
             }
             catch (MenuNotFoundException)
