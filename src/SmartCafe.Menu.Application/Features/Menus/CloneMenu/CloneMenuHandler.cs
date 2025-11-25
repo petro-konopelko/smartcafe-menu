@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Exceptions;
@@ -10,25 +11,23 @@ public class CloneMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, CloneMenuResponse>
 {
     public async Task<CloneMenuResponse> HandleAsync(
-        Guid cafeId,
-        Guid sourceMenuId,
         CloneMenuRequest request,
         CancellationToken cancellationToken = default)
     {
         // Load source menu
-        var sourceMenu = await menuRepository.GetByIdAsync(sourceMenuId, cancellationToken);
+        var sourceMenu = await menuRepository.GetByIdAsync(request.SourceMenuId, cancellationToken);
         if (sourceMenu == null)
         {
-            throw new MenuNotFoundException(sourceMenuId);
+            throw new MenuNotFoundException(request.SourceMenuId);
         }
 
         // Verify cafe ownership
-        if (sourceMenu.CafeId != cafeId)
+        if (sourceMenu.CafeId != request.CafeId)
         {
-            throw new MenuNotFoundException(sourceMenuId);
+            throw new MenuNotFoundException(request.SourceMenuId);
         }
 
         // Create new menu as draft copy
@@ -36,7 +35,7 @@ public class CloneMenuHandler(
         var clonedMenu = new Domain.Entities.Menu
         {
             Id = Guid.CreateVersion7(),
-            CafeId = cafeId,
+            CafeId = request.CafeId,
             Name = request.NewMenuName,
             IsActive = false,
             IsPublished = false,
@@ -56,8 +55,8 @@ public class CloneMenuHandler(
         var domainEvent = new MenuClonedEvent(
             Guid.CreateVersion7(),
             clonedMenu.Id,
-            sourceMenuId,
-            cafeId,
+            request.SourceMenuId,
+            request.CafeId,
             clonedMenu.Name,
             now
         );

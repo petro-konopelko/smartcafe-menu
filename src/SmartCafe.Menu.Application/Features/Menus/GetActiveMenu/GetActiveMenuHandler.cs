@@ -1,14 +1,15 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
 
-public class GetActiveMenuHandler(IMenuRepository menuRepository)
+public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetActiveMenuQuery, GetActiveMenuResponse?>
 {
     public async Task<GetActiveMenuResponse?> HandleAsync(
-        Guid cafeId,
+        GetActiveMenuQuery request,
         CancellationToken cancellationToken = default)
     {
-        var menu = await menuRepository.GetActiveMenuAsync(cafeId, cancellationToken);
+        var menu = await menuRepository.GetActiveMenuAsync(request.CafeId, cancellationToken);
 
         if (menu == null)
         {

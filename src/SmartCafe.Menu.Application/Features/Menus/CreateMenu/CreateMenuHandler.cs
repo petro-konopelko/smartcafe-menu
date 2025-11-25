@@ -1,5 +1,6 @@
 using SmartCafe.Menu.Application.Features.Menus.Shared;
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
@@ -11,10 +12,9 @@ public class CreateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuRequest, CreateMenuResponse>
 {
     public async Task<CreateMenuResponse> HandleAsync(
-        Guid cafeId,
         CreateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -26,7 +26,7 @@ public class CreateMenuHandler(
         var menu = new Domain.Entities.Menu
         {
             Id = Guid.CreateVersion7(),
-            CafeId = cafeId,
+            CafeId = request.CafeId,
             Name = request.Name,
             IsActive = false,
             IsPublished = false,
@@ -47,7 +47,7 @@ public class CreateMenuHandler(
             new MenuCreatedEvent(
                 Guid.CreateVersion7(),
                 menu.Id,
-                cafeId,
+                request.CafeId,
                 menu.Name,
                 now),
             cancellationToken);

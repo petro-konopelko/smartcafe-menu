@@ -1,37 +1,35 @@
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using SmartCafe.Menu.Application.Features.Images.UploadImage;
-using SmartCafe.Menu.Application.Features.Menus.ActivateMenu;
-using SmartCafe.Menu.Application.Features.Menus.CloneMenu;
-using SmartCafe.Menu.Application.Features.Menus.CreateMenu;
-using SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
-using SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
-using SmartCafe.Menu.Application.Features.Menus.GetMenu;
-using SmartCafe.Menu.Application.Features.Menus.ListMenus;
-using SmartCafe.Menu.Application.Features.Menus.PublishMenu;
-using SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
+using SmartCafe.Menu.Application.Mediation;
+using SmartCafe.Menu.Application.Mediation.Behaviors;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.Application.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    extension(IServiceCollection services)
+    public static IServiceCollection AddApplicationLayer(this IServiceCollection services)
     {
-        public IServiceCollection AddApplicationLayer()
-        {
-            // Register handlers (Application layer)
-            services.AddScoped<CreateMenuHandler>();
-            services.AddScoped<UpdateMenuHandler>();
-            services.AddScoped<CloneMenuHandler>();
-            services.AddScoped<GetMenuHandler>();
-            services.AddScoped<GetActiveMenuHandler>();
-            services.AddScoped<ListMenusHandler>();
-            services.AddScoped<PublishMenuHandler>();
-            services.AddScoped<ActivateMenuHandler>();
-            services.AddScoped<DeleteMenuHandler>();
-            services.AddScoped<UploadImageHandler>();
+        // Register Mediator
+        services.AddScoped<IMediator, Mediator>();
 
-            // Register validators
-            return services;
-        }
+        // Register pipeline behaviors
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // Auto-register all handlers using Scrutor
+        services.Scan(scan => scan
+            .FromAssemblies(typeof(ServiceCollectionExtensions).Assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IHandler<,>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        // Auto-register all validators using Scrutor
+        services.Scan(scan => scan
+            .FromAssemblies(typeof(ServiceCollectionExtensions).Assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IValidator<>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        return services;
     }
 }

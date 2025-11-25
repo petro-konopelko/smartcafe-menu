@@ -1,6 +1,6 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.Application.Features.Menus.CreateMenu;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -11,19 +11,13 @@ public static class CreateMenuEndpoint
         group.MapPost("/", async (
             Guid cafeId,
             [FromBody] CreateMenuRequest request,
-            IValidator<CreateMenuRequest> validator,
-            CreateMenuHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
-            var validationResult = await validator.ValidateAsync(request, ct);
-            if (!validationResult.IsValid)
-            {
-                return Results.ValidationProblem(validationResult.ToDictionary());
-            }
-
             try
             {
-                var response = await handler.HandleAsync(cafeId, request, ct);
+                var command = request with { CafeId = cafeId };
+                var response = await mediator.Send<CreateMenuRequest, CreateMenuResponse>(command, ct);
                 return Results.Created($"/api/cafes/{cafeId}/menus/{response.Id}", response);
             }
             catch (InvalidOperationException ex)

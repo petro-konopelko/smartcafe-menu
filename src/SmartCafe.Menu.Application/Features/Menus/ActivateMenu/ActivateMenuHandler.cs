@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -8,16 +9,15 @@ public class ActivateMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<ActivateMenuCommand, ActivateMenuResponse>
 {
     public async Task<ActivateMenuResponse> HandleAsync(
-        Guid cafeId,
-        Guid menuId,
+        ActivateMenuCommand request,
         CancellationToken cancellationToken = default)
     {
-        var menu = await menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != cafeId)
+        if (menu == null || menu.CafeId != request.CafeId)
         {
             throw new InvalidOperationException("Menu not found");
         }
@@ -33,7 +33,7 @@ public class ActivateMenuHandler(
         }
 
         // Deactivate currently active menu
-        var currentActiveMenu = await menuRepository.GetActiveMenuAsync(cafeId, cancellationToken);
+        var currentActiveMenu = await menuRepository.GetActiveMenuAsync(request.CafeId, cancellationToken);
         if (currentActiveMenu != null)
         {
             currentActiveMenu.IsActive = false;
@@ -42,7 +42,7 @@ public class ActivateMenuHandler(
             var deactivatedEvent = new MenuDeactivatedEvent(
                 Guid.CreateVersion7(),
                 currentActiveMenu.Id,
-                cafeId,
+                request.CafeId,
                 dateTimeProvider.UtcNow
             );
             await eventPublisher.PublishAsync(deactivatedEvent, cancellationToken);
@@ -59,7 +59,7 @@ public class ActivateMenuHandler(
         var activatedEvent = new MenuActivatedEvent(
             Guid.CreateVersion7(),
             menu.Id,
-            cafeId,
+            request.CafeId,
             menu.Name,
             dateTimeProvider.UtcNow
         );

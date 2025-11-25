@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Features.Menus.ListMenus;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -8,15 +9,16 @@ public static class ListMenusEndpoint
     {
         group.MapGet("/", async (
             Guid cafeId,
-            ListMenusHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
-            var result = await handler.HandleAsync(cafeId, ct);
+            var query = new ListMenusQuery(cafeId);
+            var result = await mediator.Send<ListMenusQuery, ListMenusResponse>(query, ct);
             return Results.Ok(result);
         })
         .WithName("ListMenus")
         .WithSummary("List all menus for a cafe")
-        .Produces<List<MenuSummaryDto>>(StatusCodes.Status200OK);
+        .Produces<ListMenusResponse>(StatusCodes.Status200OK);
 
         return group;
     }

@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Interfaces;
+using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -9,16 +10,15 @@ public class DeleteMenuHandler(
     IImageStorageService imageStorageService,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<DeleteMenuCommand, DeleteMenuResponse>
 {
-    public async Task HandleAsync(
-        Guid cafeId,
-        Guid menuId,
+    public async Task<DeleteMenuResponse> HandleAsync(
+        DeleteMenuCommand request,
         CancellationToken cancellationToken = default)
     {
-        var menu = await menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != cafeId)
+        if (menu == null || menu.CafeId != request.CafeId)
         {
             throw new InvalidOperationException("Menu not found");
         }
@@ -32,14 +32,16 @@ public class DeleteMenuHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Delete all menu images from storage
-        await imageStorageService.DeleteMenuImagesAsync(cafeId, menuId, cancellationToken);
+        await imageStorageService.DeleteMenuImagesAsync(request.CafeId, request.MenuId, cancellationToken);
 
         var deletedEvent = new MenuDeletedEvent(
             Guid.CreateVersion7(),
-            menuId,
-            cafeId,
+            request.MenuId,
+            request.CafeId,
             dateTimeProvider.UtcNow
         );
         await eventPublisher.PublishAsync(deletedEvent, cancellationToken);
+
+        return new DeleteMenuResponse(true);
     }
 }

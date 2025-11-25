@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -9,12 +10,13 @@ public static class ActivateMenuEndpoint
         group.MapPost("/{menuId:guid}/activate", async (
             Guid cafeId,
             Guid menuId,
-            ActivateMenuHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
             try
             {
-                var response = await handler.HandleAsync(cafeId, menuId, ct);
+                var command = new ActivateMenuCommand(cafeId, menuId);
+                var response = await mediator.Send<ActivateMenuCommand, ActivateMenuResponse>(command, ct);
                 return Results.Ok(response);
             }
             catch (InvalidOperationException ex)

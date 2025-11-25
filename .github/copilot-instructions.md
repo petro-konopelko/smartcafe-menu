@@ -255,12 +255,11 @@ Events should include:
 
 ## Documentation
 
-- Add XML comments to public APIs for IntelliSense support
 - Keep OpenAPI/Swagger documentation up to date
 - Document business rules in code comments
 - Maintain architecture decision records (ADRs) in `/docs/adr/` folder
 - Use clear, descriptive commit messages following conventional commits
-- Update README.md with setup and deployment instructions
+- Update README.md with setup instructions
 
 ## How to Use This File
 

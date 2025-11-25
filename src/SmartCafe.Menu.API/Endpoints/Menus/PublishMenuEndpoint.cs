@@ -1,4 +1,5 @@
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu;
+using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -9,12 +10,13 @@ public static class PublishMenuEndpoint
         group.MapPost("/{menuId:guid}/publish", async (
             Guid cafeId,
             Guid menuId,
-            PublishMenuHandler handler,
+            IMediator mediator,
             CancellationToken ct) =>
         {
             try
             {
-                var result = await handler.HandleAsync(cafeId, menuId, ct);
+                var command = new PublishMenuCommand(cafeId, menuId);
+                var result = await mediator.Send<PublishMenuCommand, PublishMenuResponse>(command, ct);
                 return Results.Ok(result);
             }
             catch (InvalidOperationException ex)
