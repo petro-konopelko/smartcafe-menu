@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 

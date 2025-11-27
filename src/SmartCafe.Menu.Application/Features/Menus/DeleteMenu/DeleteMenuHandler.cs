@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Events;
