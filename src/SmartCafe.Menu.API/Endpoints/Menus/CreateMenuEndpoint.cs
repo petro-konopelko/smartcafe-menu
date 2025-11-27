@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using SmartCafe.Menu.Application.Features.Menus.CreateMenu;
+using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;

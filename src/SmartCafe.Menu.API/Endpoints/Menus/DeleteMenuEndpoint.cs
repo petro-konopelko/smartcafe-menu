@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
+using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;

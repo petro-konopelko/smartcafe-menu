@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Application.Features.Menus.ListMenus;
+using SmartCafe.Menu.Application.Features.Menus.ListMenus.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;

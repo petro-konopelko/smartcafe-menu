@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
+using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Exceptions;
 
