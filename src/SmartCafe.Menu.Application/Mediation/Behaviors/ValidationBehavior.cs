@@ -1,16 +1,15 @@
 using FluentValidation;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.Application.Mediation.Behaviors;
 
 /// <summary>
 /// Pipeline behavior that automatically validates requests using FluentValidation.
-/// Throws ValidationException if validation fails.
+/// /// Works with handlers returning <see cref="Result"/> or <see cref="Result{T}"/>.
 /// </summary>
-/// <typeparam name="TRequest">The type of request being validated.</typeparam>
-/// <typeparam name="TResponse">The type of response produced.</typeparam>
-public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+public sealed class ValidationBehavior<TRequest, T> : IPipelineBehavior<TRequest, Result<T>>
+    where TRequest : IRequest<Result<T>>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -19,7 +18,10 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
         _validators = validators;
     }
 
-    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<Result<T>> HandleAsync(
+        TRequest request,
+        RequestHandlerDelegate<Result<T>> next,
+        CancellationToken cancellationToken)
     {
         if (!_validators.Any())
         {
@@ -38,7 +40,12 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
 
         if (failures.Count != 0)
         {
-            throw new ValidationException(failures);
+            var error = Error.Validation(failures.Select(f => new ErrorDetail(
+                f.ErrorMessage,
+                f.ErrorCode,
+                f.PropertyName)));
+
+            return Result<T>.Failure(error);
         }
 
         return await next();

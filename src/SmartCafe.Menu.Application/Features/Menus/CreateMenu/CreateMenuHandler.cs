@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
@@ -13,14 +14,18 @@ public class CreateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuRequest, CreateMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
 {
-    public async Task<CreateMenuResponse> HandleAsync(
+    public async Task<Result<CreateMenuResponse>> HandleAsync(
         CreateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
         // Validate categories exist
-        await ValidateCategoriesAsync(request, cancellationToken);
+        var categoryValidation = await ValidateCategoriesAsync(request, cancellationToken);
+        if (categoryValidation != null)
+        {
+            return categoryValidation;
+        }
 
         // Create menu entity
         var now = dateTimeProvider.UtcNow;
@@ -53,17 +58,17 @@ public class CreateMenuHandler(
                 now),
             cancellationToken);
 
-        return new CreateMenuResponse(
+        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(
             menu.Id,
             menu.CafeId,
             menu.Name,
             menu.IsActive,
             menu.IsPublished,
             menu.CreatedAt
-        );
+        ));
     }
 
-    private async Task ValidateCategoriesAsync(CreateMenuRequest request, CancellationToken cancellationToken)
+    private async Task<Result<CreateMenuResponse>?> ValidateCategoriesAsync(CreateMenuRequest request, CancellationToken cancellationToken)
     {
         var allCategoryIds = request.Sections
             .SelectMany(s => s.Items)
@@ -73,7 +78,7 @@ public class CreateMenuHandler(
 
         if (!allCategoryIds.Any())
         {
-            return;
+            return null;
         }
 
         var foundCategories = await categoryRepository.GetByIdsAsync(allCategoryIds, cancellationToken);
@@ -81,8 +86,11 @@ public class CreateMenuHandler(
 
         if (missingCategoryIds.Any())
         {
-            throw new InvalidOperationException($"Categories not found: {string.Join(", ", missingCategoryIds)}");
+            return Result<CreateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", "CATEGORIES_NOT_FOUND")));
         }
+
+        return null;
     }
 
     private void BuildMenuStructure(Domain.Entities.Menu menu, List<SectionDto> sections, DateTime timestamp)

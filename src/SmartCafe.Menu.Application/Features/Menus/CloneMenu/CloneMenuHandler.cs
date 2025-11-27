@@ -1,9 +1,9 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
-using SmartCafe.Menu.Domain.Exceptions;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CloneMenu;
@@ -12,23 +12,19 @@ public class CloneMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, CloneMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, Result<CloneMenuResponse>>
 {
-    public async Task<CloneMenuResponse> HandleAsync(
+    public async Task<Result<CloneMenuResponse>> HandleAsync(
         CloneMenuRequest request,
         CancellationToken cancellationToken = default)
     {
         // Load source menu
         var sourceMenu = await menuRepository.GetByIdAsync(request.SourceMenuId, cancellationToken);
-        if (sourceMenu == null)
+        if (sourceMenu == null || sourceMenu.CafeId != request.CafeId)
         {
-            throw new MenuNotFoundException(request.SourceMenuId);
-        }
-
-        // Verify cafe ownership
-        if (sourceMenu.CafeId != request.CafeId)
-        {
-            throw new MenuNotFoundException(request.SourceMenuId);
+            return Result<CloneMenuResponse>.Failure(Error.NotFound(
+                $"Menu with ID {request.SourceMenuId} not found",
+                "MENU_NOT_FOUND"));
         }
 
         // Create new menu as draft copy
@@ -63,14 +59,14 @@ public class CloneMenuHandler(
         );
         await eventPublisher.PublishAsync(domainEvent, cancellationToken);
 
-        return new CloneMenuResponse(
+        return Result<CloneMenuResponse>.Success(new CloneMenuResponse(
             clonedMenu.Id,
             clonedMenu.CafeId,
             clonedMenu.Name,
             clonedMenu.IsActive,
             clonedMenu.IsPublished,
             clonedMenu.CreatedAt
-        );
+        ));
     }
 
     private void CloneMenuStructure(Domain.Entities.Menu clonedMenu, Domain.Entities.Menu sourceMenu, DateTime timestamp)

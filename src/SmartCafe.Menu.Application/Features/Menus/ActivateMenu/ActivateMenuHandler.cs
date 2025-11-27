@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -10,9 +11,9 @@ public class ActivateMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<ActivateMenuCommand, ActivateMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<ActivateMenuCommand, Result<ActivateMenuResponse>>
 {
-    public async Task<ActivateMenuResponse> HandleAsync(
+    public async Task<Result<ActivateMenuResponse>> HandleAsync(
         ActivateMenuCommand request,
         CancellationToken cancellationToken = default)
     {
@@ -20,17 +21,23 @@ public class ActivateMenuHandler(
 
         if (menu == null || menu.CafeId != request.CafeId)
         {
-            throw new InvalidOperationException("Menu not found");
+            return Result<ActivateMenuResponse>.Failure(Error.NotFound(
+                $"Menu with ID {request.MenuId} not found",
+                "MENU_NOT_FOUND"));
         }
 
         if (!menu.IsPublished)
         {
-            throw new InvalidOperationException("Menu must be published before it can be activated");
+            return Result<ActivateMenuResponse>.Failure(Error.Conflict(
+                "Menu must be published before it can be activated",
+                "MENU_NOT_PUBLISHED"));
         }
 
         if (menu.IsActive)
         {
-            throw new InvalidOperationException("Menu is already active");
+            return Result<ActivateMenuResponse>.Failure(Error.Conflict(
+                "Menu is already active",
+                "MENU_ALREADY_ACTIVE"));
         }
 
         // Deactivate currently active menu
@@ -66,10 +73,10 @@ public class ActivateMenuHandler(
         );
         await eventPublisher.PublishAsync(activatedEvent, cancellationToken);
 
-        return new ActivateMenuResponse(
+        return Result<ActivateMenuResponse>.Success(new ActivateMenuResponse(
             menu.Id,
             menu.Name,
             menu.ActivatedAt.Value
-        );
+        ));
     }
 }

@@ -1,3 +1,5 @@
+using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -13,16 +15,9 @@ public static class ActivateMenuEndpoint
             IMediator mediator,
             CancellationToken ct) =>
         {
-            try
-            {
-                var command = new ActivateMenuCommand(cafeId, menuId);
-                var response = await mediator.Send<ActivateMenuCommand, ActivateMenuResponse>(command, ct);
-                return Results.Ok(response);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { Message = ex.Message });
-            }
+            var command = new ActivateMenuCommand(cafeId, menuId);
+            var result = await mediator.Send<ActivateMenuCommand, Result<ActivateMenuResponse>>(command, ct);
+            return result.ToApiResult();
         })
         .WithName("ActivateMenu")
         .WithSummary("Activate a published menu (deactivates current active menu)")

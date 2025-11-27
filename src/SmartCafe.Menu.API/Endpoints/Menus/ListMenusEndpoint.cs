@@ -1,3 +1,5 @@
+using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.ListMenus.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -13,8 +15,8 @@ public static class ListMenusEndpoint
             CancellationToken ct) =>
         {
             var query = new ListMenusQuery(cafeId);
-            var result = await mediator.Send<ListMenusQuery, ListMenusResponse>(query, ct);
-            return Results.Ok(result);
+            var result = await mediator.Send<ListMenusQuery, Result<ListMenusResponse>>(query, ct);
+            return result.ToApiResult();
         })
         .WithName("ListMenus")
         .WithSummary("List all menus for a cafe")

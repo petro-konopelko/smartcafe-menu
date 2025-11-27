@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -10,9 +11,9 @@ public class PublishMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, PublishMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, Result<PublishMenuResponse>>
 {
-    public async Task<PublishMenuResponse> HandleAsync(
+    public async Task<Result<PublishMenuResponse>> HandleAsync(
         PublishMenuCommand request,
         CancellationToken cancellationToken = default)
     {
@@ -20,12 +21,16 @@ public class PublishMenuHandler(
 
         if (menu == null || menu.CafeId != request.CafeId)
         {
-            throw new InvalidOperationException("Menu not found");
+            return Result<PublishMenuResponse>.Failure(Error.NotFound(
+                $"Menu with ID {request.MenuId} not found",
+                "MENU_NOT_FOUND"));
         }
 
         if (menu.IsPublished)
         {
-            throw new InvalidOperationException("Menu is already published");
+            return Result<PublishMenuResponse>.Failure(Error.Conflict(
+                "Menu is already published",
+                "MENU_ALREADY_PUBLISHED"));
         }
 
         menu.IsPublished = true;
@@ -43,10 +48,10 @@ public class PublishMenuHandler(
         );
         await eventPublisher.PublishAsync(publishedEvent, cancellationToken);
 
-        return new PublishMenuResponse(
+        return Result<PublishMenuResponse>.Success(new PublishMenuResponse(
             menu.Id,
             menu.Name,
             menu.PublishedAt.Value
-        );
+        ));
     }
 }

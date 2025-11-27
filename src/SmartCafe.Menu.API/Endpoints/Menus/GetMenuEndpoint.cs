@@ -1,3 +1,5 @@
+using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -14,14 +16,8 @@ public static class GetMenuEndpoint
             CancellationToken ct) =>
         {
             var query = new GetMenuQuery(cafeId, menuId);
-            var result = await mediator.Send<GetMenuQuery, GetMenuResponse?>(query, ct);
-
-            if (result == null)
-            {
-                return Results.NotFound(new { message = "Menu not found" });
-            }
-
-            return Results.Ok(result);
+            var result = await mediator.Send<GetMenuQuery, Result<GetMenuResponse>>(query, ct);
+            return result.ToApiResult();
         })
         .WithName("GetMenu")
         .WithSummary("Get a menu with all its sections and items")
