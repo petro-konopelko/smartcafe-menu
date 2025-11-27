@@ -24,9 +24,9 @@ public static class UpdateMenuEndpoint
         .WithName("UpdateMenu")
         .WithSummary("Update an existing menu with sections and items")
         .Produces<UpdateMenuResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound)
         .ProducesValidationProblem()
-        .Produces(StatusCodes.Status400BadRequest);
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

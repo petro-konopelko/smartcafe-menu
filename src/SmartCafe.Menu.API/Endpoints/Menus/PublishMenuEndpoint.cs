@@ -22,8 +22,9 @@ public static class PublishMenuEndpoint
         .WithName("PublishMenu")
         .WithSummary("Publish a menu (makes it available for activation)")
         .Produces<PublishMenuResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

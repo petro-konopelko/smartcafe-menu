@@ -3,6 +3,7 @@ using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
@@ -10,6 +11,7 @@ using SmartCafe.Menu.Domain.Interfaces;
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 
 public class CreateMenuHandler(
+    ICafeRepository cafeRepository,
     IMenuRepository menuRepository,
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
@@ -20,6 +22,15 @@ public class CreateMenuHandler(
         CreateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Validate cafe exists
+        var cafeExists = await cafeRepository.ExistsAsync(request.CafeId, cancellationToken);
+        if (!cafeExists)
+        {
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
+                $"Cafe with ID {request.CafeId} not found",
+                ErrorCodes.CafeNotFound));
+        }
+
         // Validate categories exist
         var categoryValidation = await ValidateCategoriesAsync(request, cancellationToken);
         if (categoryValidation != null)
@@ -87,7 +98,7 @@ public class CreateMenuHandler(
         if (missingCategoryIds.Any())
         {
             return Result<CreateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", "CATEGORIES_NOT_FOUND")));
+                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)));
         }
 
         return null;

@@ -1,4 +1,5 @@
 using FluentValidation;
+using SmartCafe.Menu.Application.Common.Validators;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Validators;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 
@@ -8,12 +9,18 @@ public class UpdateMenuRequestValidator : AbstractValidator<UpdateMenuRequest>
 {
     public UpdateMenuRequestValidator()
     {
+        RuleFor(x => x.CafeId)
+            .NotEmpty().WithMessage(ValidationMessages.CafeIdRequired);
+
+        RuleFor(x => x.MenuId)
+            .NotEmpty().WithMessage(ValidationMessages.MenuIdRequired);
+
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Menu name is required")
-            .MaximumLength(200).WithMessage("Menu name must not exceed 200 characters");
+            .NotEmpty().WithMessage(ValidationMessages.MenuNameRequired)
+            .MaximumLength(200).WithMessage(ValidationMessages.MenuNameMaxLength);
 
         RuleFor(x => x.Sections)
-            .NotEmpty().WithMessage("Menu must have at least one section");
+            .NotEmpty().WithMessage(ValidationMessages.MenuMustHaveSection);
 
         RuleForEach(x => x.Sections).SetValidator(new SectionDtoValidator());
     }

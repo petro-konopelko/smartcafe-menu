@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
@@ -26,7 +27,7 @@ public class UpdateMenuHandler(
         {
             return Result<UpdateMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         // Validate all category IDs exist
@@ -100,7 +101,7 @@ public class UpdateMenuHandler(
         if (missingCategoryIds.Any())
         {
             return Result<UpdateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", "CATEGORIES_NOT_FOUND")));
+                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)));
         }
 
         return null;

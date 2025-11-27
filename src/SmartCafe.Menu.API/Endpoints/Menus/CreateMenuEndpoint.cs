@@ -24,7 +24,7 @@ public static class CreateMenuEndpoint
         .WithSummary("Create a new menu with sections and items")
         .Produces<CreateMenuResponse>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
-        .Produces(StatusCodes.Status400BadRequest);
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }

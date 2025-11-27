@@ -22,8 +22,9 @@ public static class DeleteMenuEndpoint
         .WithName("DeleteMenu")
         .WithSummary("Delete a draft menu (published menus cannot be deleted)")
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status404NotFound)
-        .Produces(StatusCodes.Status409Conflict);
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

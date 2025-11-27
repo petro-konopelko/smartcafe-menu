@@ -22,8 +22,9 @@ public static class ActivateMenuEndpoint
         .WithName("ActivateMenu")
         .WithSummary("Activate a published menu (deactivates current active menu)")
         .Produces(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }

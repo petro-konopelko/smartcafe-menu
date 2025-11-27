@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
@@ -24,7 +25,7 @@ public class CloneMenuHandler(
         {
             return Result<CloneMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.SourceMenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         // Create new menu as draft copy

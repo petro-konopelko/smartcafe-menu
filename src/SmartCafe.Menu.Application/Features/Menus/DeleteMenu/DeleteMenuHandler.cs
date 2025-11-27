@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -24,14 +25,14 @@ public class DeleteMenuHandler(
         {
             return Result.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         if (menu.IsPublished)
         {
             return Result.Failure(Error.Conflict(
                 "Cannot delete a published menu. Only draft menus can be deleted.",
-                "MENU_PUBLISHED"));
+                ErrorCodes.MenuAlreadyPublished));
         }
 
         await menuRepository.DeleteAsync(menu, cancellationToken);

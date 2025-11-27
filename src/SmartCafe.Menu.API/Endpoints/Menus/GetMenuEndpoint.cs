@@ -22,7 +22,8 @@ public static class GetMenuEndpoint
         .WithName("GetMenu")
         .WithSummary("Get a menu with all its sections and items")
         .Produces<GetMenuResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }

@@ -169,7 +169,8 @@ DELETE /api/categories/{categoryId} - Delete category
 - Use repository pattern with EF Core for data access
 - Implement endpoint filters for validation and logging
 - Add comprehensive structured logging with Serilog
-- Include Swagger/OpenAPI documentation with .WithOpenApi()
+- **Add `.WithName("OperationName")` and `.WithSummary("Description")` to all endpoints** for OpenAPI documentation
+- **Do NOT use `.WithOpenApi()`** - it's deprecated in .NET 10
 - Add correlation IDs for distributed request tracking
 - Implement global exception handling middleware (for unexpected errors only)
 - Use API versioning (v1)
@@ -185,6 +186,15 @@ DELETE /api/categories/{categoryId} - Delete category
 - Use database transactions for consistency
 
 **Validation Rules:**
+- **Validation Strategy**: Clear separation between format validation and existence checking
+  - **Validators (FluentValidation)**: Format validation only (NotEmpty, MaxLength, etc.) → Returns 400 Bad Request
+  - **Handlers**: Existence checks and business logic → Returns 404 Not Found or 409 Conflict
+- **Validation Messages**: Use constants from `Application/Common/Validators/ValidationMessages.cs`
+  - Example: `.NotEmpty().WithMessage(ValidationMessages.CafeIdRequired)`
+- **Error Codes**: Use constants from `Domain/ErrorCodes.cs`
+  - Example: `Error.NotFound(message, ErrorCodes.MenuNotFound)`
+- Validators are simple, synchronous, and have NO database dependencies
+- Existence validation happens in handlers using repository calls
 - Cafe can only have **one active menu** at a time (enforced by unique index)
 - Menu must have at least one section
 - Section names must be unique within a menu
@@ -788,11 +798,9 @@ public static class CreateMenuEndpoint
         })
         .WithName("CreateMenu")
         .WithSummary("Create a new menu for a cafe")
-        .WithOpenApi()
         .Produces<CreateMenuResponse>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .ProducesProblem(StatusCodes.Status404NotFound);
         
         return group;
     }
@@ -809,11 +817,11 @@ public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<Creat
         if (cafe == null)
             return Result<CreateMenuResponse>.Failure(Error.NotFound(
                 $"Cafe with ID {request.CafeId} not found",
-                "CAFE_NOT_FOUND"));
+                ErrorCodes.CafeNotFound));
         
         if (missingCategories.Any())
             return Result<CreateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail("Categories not found", "CATEGORIES_NOT_FOUND")));
+                new ErrorDetail("Categories not found", ErrorCodes.CategoriesNotFound)));
         
         // Business logic
         var menu = new Menu { /* ... */ };
@@ -852,7 +860,7 @@ public static class ResultExtensions
 ```
 
 // Registration in Program.cs
-var cafes = app.MapGroup("/api/cafes/{cafeId:int}").WithOpenApi();
+var cafes = app.MapGroup("/api/cafes/{cafeId:guid}");
 var menus = cafes.MapGroup("/menus");
 menus.MapCreateMenu();
 menus.MapGetMenu();
@@ -862,7 +870,7 @@ menus.MapUpdateMenu();
 
 **Minimal API Configuration:**
 - Use route groups to organize related endpoints
-- Apply common metadata with .WithOpenApi() and .WithTags()
+- **Add `.WithName("OperationName")` and `.WithSummary("Description")` to all endpoints**
 - Use endpoint filters for cross-cutting concerns (validation, logging)
 - Leverage parameter binding (route, query, body, services)
 - **Use Result extensions** for consistent HTTP responses (ToApiResult, ToCreatedResult, ToNoContentResult)

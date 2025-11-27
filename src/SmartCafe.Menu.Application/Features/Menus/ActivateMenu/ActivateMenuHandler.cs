@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -23,21 +24,21 @@ public class ActivateMenuHandler(
         {
             return Result<ActivateMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         if (!menu.IsPublished)
         {
             return Result<ActivateMenuResponse>.Failure(Error.Conflict(
                 "Menu must be published before it can be activated",
-                "MENU_NOT_PUBLISHED"));
+                ErrorCodes.MenuNotPublished));
         }
 
         if (menu.IsActive)
         {
             return Result<ActivateMenuResponse>.Failure(Error.Conflict(
                 "Menu is already active",
-                "MENU_ALREADY_ACTIVE"));
+                ErrorCodes.MenuAlreadyActive));
         }
 
         // Deactivate currently active menu

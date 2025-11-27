@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
             services.AddDbContext<MenuDbContext>(options => options.UseNpgsql(connectionString));
 
             // Repositories and UoW
+            services.AddScoped<ICafeRepository, CafeRepository>();
             services.AddScoped<IMenuRepository, MenuRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();

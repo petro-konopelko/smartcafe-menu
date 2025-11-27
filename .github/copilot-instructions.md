@@ -41,22 +41,23 @@ src/
 │   └── ValueObjects/                    # Ingredient, AvailabilityHours
 ├── SmartCafe.Menu.Application/          # Use cases, DTOs, interfaces, validators
 │   ├── Common/Results/                  # Result pattern (Result<T>, Error, ErrorType, ErrorDetail, None)
+│   ├── Common/Validators/               # ValidationMessages constants for FluentValidation
 │   ├── Features/                        # Vertical slices by feature
 │   │   ├── Menus/                       # Menu feature handlers
-│   │   │   ├── ActivateMenu/            # ActivateMenuCommand, ActivateMenuHandler
-│   │   │   ├── CloneMenu/               # CloneMenuRequest, CloneMenuHandler
-│   │   │   ├── CreateMenu/              # CreateMenuRequest, CreateMenuHandler
-│   │   │   ├── DeleteMenu/              # DeleteMenuCommand, DeleteMenuHandler
-│   │   │   ├── GetActiveMenu/           # GetActiveMenuQuery, GetActiveMenuHandler
-│   │   │   ├── GetMenu/                 # GetMenuQuery, GetMenuHandler
-│   │   │   ├── ListMenus/               # ListMenusQuery, ListMenusHandler
-│   │   │   ├── PublishMenu/             # PublishMenuCommand, PublishMenuHandler
-│   │   │   ├── UpdateMenu/              # UpdateMenuRequest, UpdateMenuHandler
-│   │   │   └── Shared/                  # Shared DTOs (MenuSectionDto, MenuItemDto, etc.)
+│   │   │   ├── ActivateMenu/            # ActivateMenuCommand, ActivateMenuHandler, ActivateMenuCommandValidator
+│   │   │   ├── CloneMenu/               # CloneMenuRequest, CloneMenuHandler, CloneMenuRequestValidator
+│   │   │   ├── CreateMenu/              # CreateMenuRequest, CreateMenuHandler, CreateMenuRequestValidator
+│   │   │   ├── DeleteMenu/              # DeleteMenuCommand, DeleteMenuHandler, DeleteMenuCommandValidator
+│   │   │   ├── GetActiveMenu/           # GetActiveMenuQuery, GetActiveMenuHandler, GetActiveMenuQueryValidator
+│   │   │   ├── GetMenu/                 # GetMenuQuery, GetMenuHandler, GetMenuQueryValidator
+│   │   │   ├── ListMenus/               # ListMenusQuery, ListMenusHandler, ListMenusQueryValidator
+│   │   │   ├── PublishMenu/             # PublishMenuCommand, PublishMenuHandler, PublishMenuCommandValidator
+│   │   │   ├── UpdateMenu/              # UpdateMenuRequest, UpdateMenuHandler, UpdateMenuRequestValidator
+│   │   │   └── Shared/                  # Shared DTOs (MenuSectionDto, MenuItemDto, etc.) with validators
 │   │   └── Images/                      # Image feature handlers
 │   │       ├── UploadImage/             # UploadImageCommand, UploadImageHandler
 │   │       └── Models/                  # Shared image models
-│   ├── Interfaces/                      # Repository interfaces (IMenuRepository, ICategoryRepository)
+│   ├── Interfaces/                      # Repository interfaces (ICafeRepository, IMenuRepository, ICategoryRepository)
 │   ├── Mappings/                        # Mapperly mapper classes
 │   ├── Mediation/                       # Mediator pattern implementation
 │   │   ├── Core/                        # IMediator, IHandler interfaces
@@ -64,7 +65,7 @@ src/
 │   └── DependencyInjection/             # Application layer service registration
 ├── SmartCafe.Menu.Infrastructure/       # Data access (EF Core), Azure services
 │   ├── Data/                            # EF Core DbContext, configurations
-│   ├── Repositories/                    # Repository implementations
+│   ├── Repositories/                    # Repository implementations (CafeRepository, MenuRepository, CategoryRepository)
 │   ├── EventBus/                        # Azure Service Bus publisher
 │   ├── BlobStorage/                     # Azure Blob Storage service
 │   ├── Services/                        # DateTimeProvider, ImageProcessingService
@@ -80,6 +81,7 @@ src/
     │   │   ├── GetActiveMenuEndpoint.cs # GET /menus/active
     │   │   ├── GetMenuEndpoint.cs       # GET /menus/{menuId}
     │   │   ├── ListMenusEndpoint.cs     # GET /menus
+    │   │   ├── MenuRoutes.cs            # Centralized route URL generation
     │   │   ├── PublishMenuEndpoint.cs   # POST /menus/{menuId}/publish
     │   │   └── UpdateMenuEndpoint.cs    # PUT /menus/{menuId}
     │   └── Images/                      # Image endpoints
@@ -143,7 +145,17 @@ tests/
 
 ### Application Layer
 - Define request/response DTOs for each endpoint
-- Validate input using FluentValidation
+- **Validation Strategy**: Clear separation between format validation and existence checking
+  - **Validators (FluentValidation)**: Format validation only (NotEmpty, MaxLength, etc.) → Returns 400 Bad Request
+  - **Handlers**: Existence checks and business logic → Returns 404 Not Found or 409 Conflict
+- **Validation Messages**: Use constants from `Application/Common/Validators/ValidationMessages.cs`
+  - Example: `.NotEmpty().WithMessage(ValidationMessages.CafeIdRequired)`
+  - Centralized messages for consistency and maintainability
+- **Error Codes**: Use constants from `Domain/ErrorCodes.cs`
+  - Example: `Error.NotFound(message, ErrorCodes.MenuNotFound)`
+  - All handlers use error code constants, never string literals
+- Validators are simple, synchronous, and have NO database dependencies
+- Existence validation happens in handlers using repository calls
 - Map entities to DTOs using Mapperly (compile-time source generator)
 - Keep business logic in domain or application services
 - Interfaces define contracts (repositories, services)
@@ -172,7 +184,9 @@ tests/
 - Use standard HTTP status codes
 - Return DTOs, never domain entities
 - **Use Result extension methods** (`ToApiResult()`, `ToCreatedResult()`, `ToNoContentResult()`)
-- Add `.WithOpenApi()` for Swagger documentation
+- **Use ProblemDetails for all errors** - add `.ProducesValidationProblem()` and `.ProducesProblem(statusCode)` to all endpoints
+- **Add `.WithName("OperationName")` and `.WithSummary("Description")` to all endpoints** for OpenAPI documentation
+- **Do NOT use `.WithOpenApi()`** - it's deprecated in .NET 10
 - Enable CORS for frontend origins
 - **No try-catch blocks** - Result pattern handles errors
 - Endpoint pattern:
@@ -183,10 +197,13 @@ tests/
       {
           var command = request with { CafeId = cafeId };
           var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
-          return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
+          return result.ToCreatedResult(response => MenuRoutes.GetMenuLocation(cafeId, response.Id));
       })
       .WithName("CreateMenu")
-      .WithOpenApi();
+      .WithSummary("Create a new menu with sections and items")
+      .Produces<CreateMenuResponse>(StatusCodes.Status201Created)
+      .ProducesValidationProblem()
+      .ProducesProblem(StatusCodes.Status404NotFound);
       return group;
   }
   ```
@@ -299,22 +316,23 @@ public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<Creat
 {
     public async Task<Result<CreateMenuResponse>> HandleAsync(CreateMenuRequest request, CancellationToken ct)
     {
-        // NotFound error
-        if (menu == null)
+        // Check cafe exists (404)
+        var cafeExists = await cafeRepository.ExistsAsync(request.CafeId, ct);
+        if (!cafeExists)
             return Result<CreateMenuResponse>.Failure(Error.NotFound(
-                $"Menu with ID {id} not found", 
-                "MENU_NOT_FOUND"));
+                $"Cafe with ID {request.CafeId} not found", 
+                ErrorCodes.CafeNotFound));
         
-        // Validation error (multiple details supported)
+        // Validation error (400 - multiple details supported)
         if (missingCategories.Any())
             return Result<CreateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail("Categories not found", "CATEGORIES_NOT_FOUND")));
+                new ErrorDetail("Categories not found", ErrorCodes.CategoriesNotFound)));
         
-        // Conflict error
+        // Conflict error (409)
         if (menu.IsActive)
             return Result<CreateMenuResponse>.Failure(Error.Conflict(
                 "Menu is already active", 
-                "MENU_ALREADY_ACTIVE"));
+                ErrorCodes.MenuAlreadyActive));
         
         // Success
         return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
@@ -333,7 +351,10 @@ public static RouteGroupBuilder MapCreateMenu(this RouteGroupBuilder group)
         return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
     })
     .WithName("CreateMenu")
-    .WithOpenApi();
+    .WithSummary("Create a new menu with sections and items")
+    .Produces<CreateMenuResponse>(StatusCodes.Status201Created)
+    .ProducesValidationProblem()
+    .ProducesProblem(StatusCodes.Status404NotFound);
     return group;
 }
 ```

@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetMenu;
 
@@ -17,7 +18,7 @@ public class GetMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetM
         {
             return Result<GetMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         return Result<GetMenuResponse>.Success(new GetMenuResponse(
