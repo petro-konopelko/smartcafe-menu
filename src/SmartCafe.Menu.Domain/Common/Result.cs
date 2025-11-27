@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Application.Common.Results;
+namespace SmartCafe.Menu.Domain.Common;
 
 public class Result<T>
 {

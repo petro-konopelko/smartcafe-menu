@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Application.Common.Results;
+using SmartCafe.Menu.Domain.Common;
 
 namespace SmartCafe.Menu.API.Extensions;
 
