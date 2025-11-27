@@ -1,8 +1,8 @@
-using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
+using SmartCafe.Menu.Domain.Common;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 

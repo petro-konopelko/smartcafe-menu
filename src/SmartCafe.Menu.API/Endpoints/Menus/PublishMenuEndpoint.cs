@@ -1,7 +1,7 @@
 using SmartCafe.Menu.API.Extensions;
-using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain.Common;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 

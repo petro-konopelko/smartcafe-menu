@@ -1,6 +1,6 @@
 using FluentValidation;
-using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain.Common;
 
 namespace SmartCafe.Menu.Application.Mediation.Behaviors;
 
