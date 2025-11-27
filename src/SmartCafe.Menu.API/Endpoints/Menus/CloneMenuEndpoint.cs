@@ -24,9 +24,8 @@ public static class CloneMenuEndpoint
         .WithName("CloneMenu")
         .WithSummary("Clone an existing menu to create a new draft menu")
         .Produces<CloneMenuResponse>(StatusCodes.Status201Created)
-        .Produces(StatusCodes.Status404NotFound)
         .ProducesValidationProblem()
-        .Produces(StatusCodes.Status400BadRequest);
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }

@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.GetActiveMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
 
@@ -17,7 +18,7 @@ public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandle
         {
             return Result<GetActiveMenuResponse>.Failure(Error.NotFound(
                 $"No active menu found for cafe {request.CafeId}",
-                "ACTIVE_MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         return Result<GetActiveMenuResponse>.Success(new GetActiveMenuResponse(

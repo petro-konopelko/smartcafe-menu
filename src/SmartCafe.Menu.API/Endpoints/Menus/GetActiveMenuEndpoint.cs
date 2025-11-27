@@ -19,9 +19,10 @@ public static class GetActiveMenuEndpoint
             return result.ToApiResult();
         })
         .WithName("GetActiveMenu")
-        .WithSummary("Get the currently active menu for customers")
+        .WithSummary("Get the currently active menu for a cafe")
         .Produces<GetActiveMenuResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }

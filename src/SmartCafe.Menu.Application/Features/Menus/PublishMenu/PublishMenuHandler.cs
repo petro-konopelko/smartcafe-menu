@@ -2,6 +2,7 @@ using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
+using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
@@ -23,14 +24,14 @@ public class PublishMenuHandler(
         {
             return Result<PublishMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                "MENU_NOT_FOUND"));
+                ErrorCodes.MenuNotFound));
         }
 
         if (menu.IsPublished)
         {
             return Result<PublishMenuResponse>.Failure(Error.Conflict(
                 "Menu is already published",
-                "MENU_ALREADY_PUBLISHED"));
+                ErrorCodes.MenuAlreadyPublished));
         }
 
         menu.IsPublished = true;

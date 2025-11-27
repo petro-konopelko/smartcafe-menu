@@ -20,7 +20,9 @@ public static class ListMenusEndpoint
         })
         .WithName("ListMenus")
         .WithSummary("List all menus for a cafe")
-        .Produces<ListMenusResponse>(StatusCodes.Status200OK);
+        .Produces<ListMenusResponse>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
+        .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }
