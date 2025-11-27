@@ -1,3 +1,5 @@
+using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.GetActiveMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -13,14 +15,8 @@ public static class GetActiveMenuEndpoint
             CancellationToken ct) =>
         {
             var query = new GetActiveMenuQuery(cafeId);
-            var result = await mediator.Send<GetActiveMenuQuery, GetActiveMenuResponse?>(query, ct);
-
-            if (result == null)
-            {
-                return Results.NotFound(new { message = "No active menu found for this cafe" });
-            }
-
-            return Results.Ok(result);
+            var result = await mediator.Send<GetActiveMenuQuery, Result<GetActiveMenuResponse>>(query, ct);
+            return result.ToApiResult();
         })
         .WithName("GetActiveMenu")
         .WithSummary("Get the currently active menu for customers")

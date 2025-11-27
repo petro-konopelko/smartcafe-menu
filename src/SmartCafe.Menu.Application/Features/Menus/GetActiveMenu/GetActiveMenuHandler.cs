@@ -1,12 +1,13 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.GetActiveMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
 
-public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetActiveMenuQuery, GetActiveMenuResponse?>
+public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetActiveMenuQuery, Result<GetActiveMenuResponse>>
 {
-    public async Task<GetActiveMenuResponse?> HandleAsync(
+    public async Task<Result<GetActiveMenuResponse>> HandleAsync(
         GetActiveMenuQuery request,
         CancellationToken cancellationToken = default)
     {
@@ -14,10 +15,12 @@ public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandle
 
         if (menu == null)
         {
-            return null;
+            return Result<GetActiveMenuResponse>.Failure(Error.NotFound(
+                $"No active menu found for cafe {request.CafeId}",
+                "ACTIVE_MENU_NOT_FOUND"));
         }
 
-        return new GetActiveMenuResponse(
+        return Result<GetActiveMenuResponse>.Success(new GetActiveMenuResponse(
             menu.Id,
             menu.Name,
             menu.Sections.Select(s => new ActiveMenuSectionDto(
@@ -39,6 +42,6 @@ public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandle
                     )).ToList()
                 )).ToList()
             )).ToList()
-        );
+        ));
     }
 }

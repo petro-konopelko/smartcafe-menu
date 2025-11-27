@@ -8,10 +8,11 @@ A .NET 10 microservice for managing digital menus in the SmartCafe smart orderin
 ## 🏗️ Architecture
 
 - **Clean Architecture** with Vertical Slice Architecture
-- **Domain Layer**: Entities, value objects, domain events, exceptions
-- **Application Layer**: DTOs, validators, interfaces, Mapperly mappers
+- **Result Pattern**: Zero exception-based error handling in application layer
+- **Domain Layer**: Entities, value objects, domain events
+- **Application Layer**: Handlers (return `Result<T>`), DTOs, validators, Mapperly mappers
 - **Infrastructure Layer**: EF Core, PostgreSQL, Azure Blob Storage, Azure Service Bus
-- **API Layer**: ASP.NET Core Minimal API with endpoint filters
+- **API Layer**: ASP.NET Core Minimal API with Result extensions
 
 ## 🚀 Features
 
@@ -103,11 +104,13 @@ smartcafe-menu/
 │   │   ├── Exceptions/                  # Custom exceptions
 │   │   └── Interfaces/                  # IDateTimeProvider
 │   ├── SmartCafe.Menu.Application/      # Use cases & DTOs
-│   │   ├── Features/                    # Vertical slices
+│   │   ├── Common/Results/              # Result pattern (Result<T>, Error, ErrorType)
+│   │   ├── Features/                    # Vertical slices (handlers return Result<T>)
 │   │   │   ├── Menus/
 │   │   │   └── Categories/
 │   │   ├── Interfaces/                  # Repository interfaces
-│   │   └── Mappings/                    # Mapperly mappers
+│   │   ├── Mappings/                    # Mapperly mappers
+│   │   └── Mediation/                   # Mediator, ValidationBehavior
 │   ├── SmartCafe.Menu.Infrastructure/   # Data access & external services
 │   │   ├── Data/PostgreSQL/             # EF Core DbContext
 │   │   ├── Repositories/                # Repository implementations
@@ -115,8 +118,10 @@ smartcafe-menu/
 │   │   ├── BlobStorage/                 # Azure Blob Storage
 │   │   └── Services/                    # DateTimeProvider, ImageProcessing
 │   ├── SmartCafe.Menu.API/              # Minimal API endpoints
-│   │   ├── Endpoints/                   # Endpoint definitions
-│   │   ├── Filters/                     # Validation, logging, exception filters
+│   │   ├── Endpoints/                   # Endpoint definitions (use Result extensions)
+│   │   ├── Extensions/                  # Result → HTTP mapping (ToApiResult, ToCreatedResult)
+│   │   ├── Filters/                     # Validation, logging filters
+│   │   ├── Middleware/                  # Exception handling for unexpected errors
 │   │   └── Program.cs                   # Application startup
 │   ├── SmartCafe.Menu.AppHost/          # .NET Aspire orchestration
 │   └── SmartCafe.Menu.ServiceDefaults/  # Shared Aspire config
@@ -130,14 +135,50 @@ smartcafe-menu/
 
 ## 🔑 Key Design Patterns
 
+### Result Pattern (No Exceptions)
+
+All handlers return `Result<T>` instead of throwing exceptions:
+
+```csharp
+public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
+{
+    public async Task<Result<CreateMenuResponse>> HandleAsync(...)
+    {
+        // Return errors instead of throwing
+        if (menu == null)
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
+                "Menu not found", "MENU_NOT_FOUND"));
+        
+        // Return success with value
+        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
+    }
+}
+```
+
+**Endpoints use Result extensions:**
+```csharp
+group.MapPost("/", async (CreateMenuRequest request, IMediator mediator, CancellationToken ct) => 
+{
+    var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(request, ct);
+    return result.ToCreatedResult($"/api/menus/{result.Value!.Id}"); // Auto-maps errors to HTTP status
+})
+.WithName("CreateMenu")
+.WithOpenApi();
+```
+
+**Error Types:**
+- `Error.NotFound()` → 404 Not Found
+- `Error.Validation()` → 400 Bad Request
+- `Error.Conflict()` → 409 Conflict
+
 ### IDateTimeProvider
 
 All DateTime operations use `IDateTimeProvider` instead of `DateTime.UtcNow` for testability:
 
 ```csharp
-public class MenuService(IMenuRepository repository, IDateTimeProvider dateTimeProvider)
+public class CreateMenuHandler(IMenuRepository repository, IDateTimeProvider dateTimeProvider)
 {
-    public async Task<Menu> CreateMenuAsync(CreateMenuRequest request)
+    public async Task<Result<CreateMenuResponse>> HandleAsync(CreateMenuRequest request)
     {
         var menu = new Menu
         {
@@ -145,7 +186,7 @@ public class MenuService(IMenuRepository repository, IDateTimeProvider dateTimeP
             CreatedAt = dateTimeProvider.UtcNow, // Testable!
             UpdatedAt = dateTimeProvider.UtcNow
         };
-        return await repository.CreateAsync(menu);
+        // ...
     }
 }
 ```
@@ -159,18 +200,6 @@ public class Menu
 {
     public Guid Id { get; init; } = Guid.CreateVersion7(); // UUIDv7
 }
-```
-
-### Minimal API with Endpoint Filters
-
-```csharp
-group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, ...) => 
-{
-    // Implementation
-})
-.WithName("CreateMenu")
-.WithOpenApi()
-.AddEndpointFilter<ValidationFilter>();
 ```
 
 ## 🔐 Security & Secrets

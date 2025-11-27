@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -11,9 +12,9 @@ public class DeleteMenuHandler(
     IImageStorageService imageStorageService,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<DeleteMenuCommand, DeleteMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<DeleteMenuCommand, Result>
 {
-    public async Task<DeleteMenuResponse> HandleAsync(
+    public async Task<Result> HandleAsync(
         DeleteMenuCommand request,
         CancellationToken cancellationToken = default)
     {
@@ -21,12 +22,16 @@ public class DeleteMenuHandler(
 
         if (menu == null || menu.CafeId != request.CafeId)
         {
-            throw new InvalidOperationException("Menu not found");
+            return Result.Failure(Error.NotFound(
+                $"Menu with ID {request.MenuId} not found",
+                "MENU_NOT_FOUND"));
         }
 
         if (menu.IsPublished)
         {
-            throw new InvalidOperationException("Cannot delete a published menu. Only draft menus can be deleted.");
+            return Result.Failure(Error.Conflict(
+                "Cannot delete a published menu. Only draft menus can be deleted.",
+                "MENU_PUBLISHED"));
         }
 
         await menuRepository.DeleteAsync(menu, cancellationToken);
@@ -43,6 +48,6 @@ public class DeleteMenuHandler(
         );
         await eventPublisher.PublishAsync(deletedEvent, cancellationToken);
 
-        return new DeleteMenuResponse(true);
+        return Result.Success();
     }
 }

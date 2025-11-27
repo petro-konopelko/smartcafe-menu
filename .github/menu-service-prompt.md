@@ -13,9 +13,9 @@ Create a .NET 10 Web API project for the Menu Service using Clean Architecture p
 
 **Architecture Layers:**
 1. Domain - Core business logic and entities
-2. Application - Use cases, DTOs, interfaces
+2. Application - Use cases, DTOs, interfaces, Result pattern (Result<T>, Error types)
 3. Infrastructure - Data access, external services, Azure integrations
-4. API - Minimal API endpoints, filters, middleware, startup
+4. API - Minimal API endpoints (use Result extensions), filters, middleware, startup
 
 **Core Features:**
 
@@ -164,13 +164,14 @@ DELETE /api/categories/{categoryId} - Delete category
 - .NET Aspire AppHost for local orchestration
 
 **Additional Requirements:**
+- **Use Result Pattern**: All handlers return `Result<T>` or `Result` instead of throwing exceptions for business errors
 - Use Minimal API with endpoint filters for cross-cutting concerns
 - Use repository pattern with EF Core for data access
-- Implement endpoint filters for validation, logging, and exception handling
+- Implement endpoint filters for validation and logging
 - Add comprehensive structured logging with Serilog
 - Include Swagger/OpenAPI documentation with .WithOpenApi()
 - Add correlation IDs for distributed request tracking
-- Implement global exception handling
+- Implement global exception handling middleware (for unexpected errors only)
 - Use API versioning (v1)
 - Add CORS configuration
 - Include Docker support (Dockerfile with multi-stage build)
@@ -437,86 +438,127 @@ public class MenuServiceTests
 ```
 src/
 ├── SmartCafe.Menu.AppHost/              # .NET Aspire orchestration
-│   ├── Program.cs
+│   ├── AppHost.cs
 │   └── appsettings.json
 ├── SmartCafe.Menu.ServiceDefaults/      # Shared Aspire configuration
-│   ├── Extensions.cs
-│   └── HostingExtensions.cs
+│   └── Extensions.cs
+├── SmartCafe.Menu.Migrator/             # Database migration tool
+│   └── Program.cs
 ├── SmartCafe.Menu.Domain/
-│   ├── Entities/
-│   ├── Enums/
-│   ├── Events/
-│   ├── Exceptions/
-│   └── ValueObjects/
+│   ├── Entities/                        # Menu, Section, MenuItem, Category
+│   ├── Events/                          # MenuCreatedEvent, MenuActivatedEvent, etc.
+│   ├── Exceptions/                      # MenuNotFoundException (used by domain only)
+│   ├── Interfaces/                      # IDateTimeProvider
+│   ├── Services/                        # Domain services
+│   └── ValueObjects/                    # Ingredient
 ├── SmartCafe.Menu.Application/
-│   ├── Features/                        # Vertical slice architecture
+│   ├── Common/Results/                  # Result pattern infrastructure
+│   │   ├── Result.cs                    # Result<T> base and Result sealed class
+│   │   ├── None.cs                      # Singleton for void operations
+│   │   ├── Error.cs                     # Error envelope with ErrorType + ErrorDetails
+│   │   ├── ErrorType.cs                 # NotFound, Validation, Conflict
+│   │   └── ErrorDetail.cs               # Individual error details
+│   ├── Features/                        # Vertical slice architecture (handlers return Result<T>)
 │   │   ├── Menus/
+│   │   │   ├── ActivateMenu/
+│   │   │   │   ├── ActivateMenuCommand.cs
+│   │   │   │   ├── ActivateMenuHandler.cs
+│   │   │   │   └── Models/ActivateMenuResponse.cs
+│   │   │   ├── CloneMenu/
+│   │   │   │   ├── CloneMenuRequest.cs
+│   │   │   │   ├── CloneMenuHandler.cs
+│   │   │   │   └── Models/CloneMenuResponse.cs
 │   │   │   ├── CreateMenu/
-│   │   │   ├── UpdateMenu/
+│   │   │   │   ├── CreateMenuRequest.cs
+│   │   │   │   ├── CreateMenuHandler.cs
+│   │   │   │   ├── CreateMenuValidator.cs
+│   │   │   │   └── Models/CreateMenuResponse.cs
+│   │   │   ├── DeleteMenu/
+│   │   │   │   ├── DeleteMenuCommand.cs
+│   │   │   │   └── DeleteMenuHandler.cs
+│   │   │   ├── GetActiveMenu/
+│   │   │   │   ├── GetActiveMenuQuery.cs
+│   │   │   │   ├── GetActiveMenuHandler.cs
+│   │   │   │   └── Models/GetActiveMenuResponse.cs
+│   │   │   ├── GetMenu/
+│   │   │   │   ├── GetMenuQuery.cs
+│   │   │   │   ├── GetMenuHandler.cs
+│   │   │   │   └── Models/GetMenuResponse.cs
+│   │   │   ├── ListMenus/
+│   │   │   │   ├── ListMenusQuery.cs
+│   │   │   │   ├── ListMenusHandler.cs
+│   │   │   │   └── Models/ListMenusResponse.cs
 │   │   │   ├── PublishMenu/
-│   │   │   └── GetMenu/
-│   │   ├── Sections/
-│   │   ├── Items/
-│   │   └── Categories/
-│   ├── DTOs/
-│   ├── Interfaces/
+│   │   │   │   ├── PublishMenuCommand.cs
+│   │   │   │   ├── PublishMenuHandler.cs
+│   │   │   │   └── Models/PublishMenuResponse.cs
+│   │   │   ├── UpdateMenu/
+│   │   │   │   ├── UpdateMenuRequest.cs
+│   │   │   │   ├── UpdateMenuHandler.cs
+│   │   │   │   ├── UpdateMenuValidator.cs
+│   │   │   │   └── Models/UpdateMenuResponse.cs
+│   │   │   └── Shared/                  # Shared DTOs
+│   │   │       └── Models/              # MenuSectionDto, MenuItemDto, IngredientDto
+│   │   └── Images/
+│   │       ├── UploadImage/
+│   │       │   ├── UploadImageCommand.cs
+│   │       │   ├── UploadImageHandler.cs
+│   │       │   └── Models/UploadImageResponse.cs
+│   │       └── Models/                  # Shared image models
+│   ├── Interfaces/                      # IMenuRepository, ICategoryRepository, IEventPublisher
 │   ├── Mappings/                        # Mapperly mapper classes
-│   └── Validators/                      # FluentValidation
+│   ├── Mediation/                       # Mediator pattern
+│   │   ├── Core/                        # IMediator, ICommandHandler, IQueryHandler
+│   │   └── Behaviors/                   # ValidationBehavior (wraps FluentValidation)
+│   └── DependencyInjection/             # AddApplicationServices()
 ├── SmartCafe.Menu.Infrastructure/
 │   ├── Data/
-│   │   └── PostgreSQL/
-│   │       ├── MenuDbContext.cs
-│   │       ├── Configurations/           # EF Core entity configurations
-│   │       ├── Migrations/               # EF Core migrations
-│   │       └── UnitOfWork.cs
-│   ├── Repositories/
+│   │   ├── MenuDbContext.cs
+│   │   └── Configurations/              # EF Core entity configurations
+│   ├── Repositories/                    # MenuRepository, CategoryRepository
 │   ├── EventBus/
 │   │   └── ServiceBusPublisher.cs
 │   ├── BlobStorage/
 │   │   └── AzureBlobService.cs
-│   └── Services/
-│       └── ImageProcessingService.cs
+│   ├── Services/
+│   │   ├── DateTimeProvider.cs
+│   │   └── ImageProcessingService.cs
+│   ├── Migrations/                      # EF Core migrations
+│   └── DependencyInjection/             # AddInfrastructureServices()
 └── SmartCafe.Menu.API/
     ├── Endpoints/                       # Minimal API endpoint extensions
     │   ├── Menus/
-    │   │   ├── CreateMenuEndpoint.cs
-    │   │   ├── GetMenuEndpoint.cs
-    │   │   ├── UpdateMenuEndpoint.cs
-    │   │   ├── DeleteMenuEndpoint.cs
-    │   │   ├── PublishMenuEndpoint.cs
-    │   │   └── ListMenusEndpoint.cs
-    │   ├── Sections/
-    │   │   ├── AddSectionEndpoint.cs
-    │   │   ├── UpdateSectionEndpoint.cs
-    │   │   ├── DeleteSectionEndpoint.cs
-    │   │   └── ReorderSectionsEndpoint.cs
-    │   ├── Items/
-    │   │   ├── AddItemEndpoint.cs
-    │   │   ├── UpdateItemEndpoint.cs
-    │   │   ├── DeleteItemEndpoint.cs
-    │   │   └── UploadImageEndpoint.cs
-    │   ├── Categories/
-    │   │   ├── CreateCategoryEndpoint.cs
-    │   │   ├── UpdateCategoryEndpoint.cs
-    │   │   └── DeleteCategoryEndpoint.cs
-    │   └── EndpointExtensions.cs        # Central endpoint registration
+    │   │   ├── ActivateMenuEndpoint.cs  # POST /api/cafes/{cafeId}/menus/{menuId}/activate
+    │   │   ├── CloneMenuEndpoint.cs     # POST /api/cafes/{cafeId}/menus/{menuId}/clone
+    │   │   ├── CreateMenuEndpoint.cs    # POST /api/cafes/{cafeId}/menus
+    │   │   ├── DeleteMenuEndpoint.cs    # DELETE /api/cafes/{cafeId}/menus/{menuId}
+    │   │   ├── GetActiveMenuEndpoint.cs # GET /api/cafes/{cafeId}/menus/active
+    │   │   ├── GetMenuEndpoint.cs       # GET /api/cafes/{cafeId}/menus/{menuId}
+    │   │   ├── ListMenusEndpoint.cs     # GET /api/cafes/{cafeId}/menus
+    │   │   ├── MenuRoutes.cs            # Centralized route URL generation
+    │   │   ├── PublishMenuEndpoint.cs   # POST /api/cafes/{cafeId}/menus/{menuId}/publish
+    │   │   └── UpdateMenuEndpoint.cs    # PUT /api/cafes/{cafeId}/menus/{menuId}
+    │   └── Images/
+    │       └── UploadImageEndpoint.cs   # POST /api/cafes/{cafeId}/menus/{menuId}/items/{itemId}/image
+    ├── Extensions/
+    │   ├── ResultExtensions.cs          # Result → HTTP mapping (ToApiResult, ToCreatedResult)
+    │   └── WebApplicationExtensions.cs  # Endpoint registration helpers
     ├── Filters/
-    │   ├── ValidationFilter.cs
-    │   ├── ExceptionFilter.cs
-    │   └── LoggingFilter.cs
+    │   └── ValidationFilter.cs          # FluentValidation filter
     ├── Middleware/
+    │   └── ExceptionHandlingMiddleware.cs  # Handles unexpected exceptions only
     ├── Program.cs
     └── appsettings.json
 
 tests/
 ├── SmartCafe.Menu.UnitTests/
-│   ├── Domain/
-│   ├── Application/
-│   └── Infrastructure/
+│   ├── Application/                     # Handler tests
+│   ├── Domain/                          # Entity/value object tests
+│   └── Fakes/                           # FakeDateTimeProvider
 └── SmartCafe.Menu.IntegrationTests/
-    ├── Endpoints/
-    └── Fixtures/
-        └── PostgreSqlFixture.cs
+    ├── Api/
+    ├── Endpoints/                       # Endpoint integration tests
+    └── Fixtures/                        # WebApplicationFactory, PostgreSqlFixture
 ```
 
 **PostgreSQL Indexes and Constraints:**
@@ -564,6 +606,147 @@ ALTER TABLE Sections ADD CONSTRAINT CK_Sections_AvailableHours CHECK (AvailableF
 - Prevents enumeration attacks (unlike sequential integers)
 - Globally unique across distributed systems
 
+**Result Pattern - No Exception-Based Error Handling:**
+
+All application layer handlers return `Result<T>` or `Result` instead of throwing exceptions for business errors:
+
+```csharp
+// Result pattern infrastructure in Application/Common/Results/
+
+// Result.cs - Base class and sealed Result for void operations
+public class Result<T>
+{
+    public bool IsSuccess { get; }
+    public bool IsFailure => !IsSuccess;
+    public T? Value { get; }
+    public Error? Error { get; }
+    
+    private Result(T value) { IsSuccess = true; Value = value; }
+    private Result(Error error) { IsSuccess = false; Error = error; }
+    
+    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Failure(Error error) => new(error);
+}
+
+public sealed class Result : Result<None>
+{
+    private Result(None value) : base(value) { }
+    private Result(Error error) : base(error) { }
+    
+    public static Result Success() => new(None.Instance);
+    public new static Result Failure(Error error) => new(error);
+}
+
+// None.cs - Singleton for void operations
+public sealed class None
+{
+    public static readonly None Instance = new();
+    private None() { }
+}
+
+// Error.cs - Error envelope
+public sealed class Error
+{
+    public ErrorType Type { get; }
+    public IReadOnlyList<ErrorDetail> Details { get; }
+    
+    private Error(ErrorType type, IReadOnlyList<ErrorDetail> details)
+    {
+        Type = type;
+        Details = details;
+    }
+    
+    public static Error Create(ErrorType type, params ErrorDetail[] details) =>
+        new(type, details);
+    
+    public static Error Create(ErrorType type, IEnumerable<ErrorDetail> details) =>
+        new(type, details.ToList());
+    
+    public static Error NotFound(string message, string? code = null) =>
+        new(ErrorType.NotFound, new[] { new ErrorDetail(message, code) });
+    
+    public static Error Validation(params ErrorDetail[] details) =>
+        new(ErrorType.Validation, details);
+    
+    public static Error Validation(IEnumerable<ErrorDetail> details) =>
+        new(ErrorType.Validation, details.ToList());
+    
+    public static Error Conflict(string message, string? code = null) =>
+        new(ErrorType.Conflict, new[] { new ErrorDetail(message, code) });
+}
+
+// ErrorType.cs
+public enum ErrorType { NotFound, Validation, Conflict }
+
+// ErrorDetail.cs
+public sealed record ErrorDetail(string Message, string? Code = null, string? Field = null);
+```
+
+**Handler Pattern:**
+```csharp
+public interface ICommandHandler<TRequest, TResponse>
+{
+    Task<TResponse> HandleAsync(TRequest request, CancellationToken ct = default);
+}
+
+// All handlers return Result<T>
+public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
+{
+    public async Task<Result<CreateMenuResponse>> HandleAsync(CreateMenuRequest request, CancellationToken ct)
+    {
+        // NotFound
+        if (menu == null)
+            return Result<CreateMenuResponse>.Failure(Error.NotFound("Menu not found", "MENU_NOT_FOUND"));
+        
+        // Validation
+        if (categories.Count == 0)
+            return Result<CreateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail("At least one category required", "CATEGORIES_REQUIRED")));
+        
+        // Conflict
+        if (menu.IsActive)
+            return Result<CreateMenuResponse>.Failure(Error.Conflict(
+                "Menu is already active", "MENU_ALREADY_ACTIVE"));
+        
+        // Success
+        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
+    }
+}
+```
+
+**ValidationBehavior (Mediator Pipeline):**
+```csharp
+public class ValidationBehavior<TRequest, T> : IPipelineBehavior<TRequest, Result<T>>
+    where TRequest : notnull
+{
+    private readonly IEnumerable<IValidator<TRequest>> _validators;
+    
+    public async Task<Result<T>> Handle(TRequest request, RequestHandlerDelegate<Result<T>> next, CancellationToken ct)
+    {
+        if (!_validators.Any()) return await next();
+        
+        var context = new ValidationContext<TRequest>(request);
+        var results = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, ct)));
+        var failures = results.SelectMany(r => r.Errors).Where(f => f != null).ToList();
+        
+        if (failures.Any())
+        {
+            var errorDetails = failures.Select(f => 
+                new ErrorDetail(f.ErrorMessage, f.ErrorCode, f.PropertyName)).ToArray();
+            return Result<T>.Failure(Error.Validation(errorDetails));
+        }
+        
+        return await next();
+    }
+}
+```
+
+**Result Extensions (API Layer):**
+- Error mapping: NotFound→404, Validation→400, Conflict→409
+- Unknown types throw exception (fail-fast)
+- No try-catch blocks in endpoints
+- ValidationBehavior automatically wraps FluentValidation errors
+
 **Seed Data:**
 Create default categories using EF Core migrations or data seeding:
 ```csharp
@@ -581,6 +764,13 @@ modelBuilder.Entity<Category>().HasData(
 
 **Minimal API Example:**
 ```csharp
+// Centralized route URLs in Endpoints/Menus/MenuRoutes.cs
+public static class MenuRoutes
+{
+    public static string GetMenuLocation(Guid cafeId, Guid menuId) => 
+        $"/api/cafes/{cafeId}/menus/{menuId}";
+}
+
 // Endpoint definition in Endpoints/Menus/CreateMenuEndpoint.cs
 public static class CreateMenuEndpoint
 {
@@ -589,35 +779,77 @@ public static class CreateMenuEndpoint
         group.MapPost("/", async (
             Guid cafeId,
             CreateMenuRequest request,
-            IMenuRepository repository,
-            IUnitOfWork unitOfWork,
-            IValidator<CreateMenuRequest> validator,
-            IDateTimeProvider dateTimeProvider,
+            IMediator mediator,
             CancellationToken ct) =>
         {
-            // Validation
-            var validationResult = await validator.ValidateAsync(request, ct);
-            if (!validationResult.IsValid)
-                return Results.ValidationProblem(validationResult.ToDictionary());
-
-            // Business logic and mapping
-            var menu = request.ToMenu(cafeId); // Mapperly generated
-            await repository.CreateAsync(menu, ct);
-            await unitOfWork.SaveChangesAsync(ct);
-            
-            var response = menu.ToResponse();
-            return Results.Created($"/api/cafes/{cafeId}/menus/{menu.Id}", response);
+            var command = request with { CafeId = cafeId };
+            var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
+            return result.ToCreatedResult(response => MenuRoutes.GetMenuLocation(cafeId, response.Id));
         })
         .WithName("CreateMenu")
         .WithSummary("Create a new menu for a cafe")
         .WithOpenApi()
-        .Produces<MenuResponse>(StatusCodes.Status201Created)
+        .Produces<CreateMenuResponse>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
-        .AddEndpointFilter<LoggingFilter>();
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
         
         return group;
     }
 }
+
+// Handler implementation in Application/Features/Menus/CreateMenu/CreateMenuHandler.cs
+public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
+{
+    public async Task<Result<CreateMenuResponse>> HandleAsync(
+        CreateMenuRequest request, 
+        CancellationToken ct)
+    {
+        // Return errors instead of throwing exceptions
+        if (cafe == null)
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
+                $"Cafe with ID {request.CafeId} not found",
+                "CAFE_NOT_FOUND"));
+        
+        if (missingCategories.Any())
+            return Result<CreateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail("Categories not found", "CATEGORIES_NOT_FOUND")));
+        
+        // Business logic
+        var menu = new Menu { /* ... */ };
+        await _repository.CreateAsync(menu, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+        
+        // Return success with value
+        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(menu.Id, ...));
+    }
+}
+
+// Result extension methods in API/Extensions/ResultExtensions.cs
+public static class ResultExtensions
+{
+    public static IResult ToApiResult<T>(this Result<T> result) => result.IsSuccess
+        ? Results.Ok(result.Value)
+        : MapErrorToHttpStatus(result.Error);
+    
+    // Null-safe: factory delegate only invoked when result is successful
+    public static IResult ToCreatedResult<T>(this Result<T> result, Func<T, string> locationFactory) => result.IsSuccess
+        ? Results.Created(locationFactory(result.Value!), result.Value)
+        : MapErrorToHttpStatus(result.Error);
+    
+    public static IResult ToNoContentResult(this Result result) => result.IsSuccess
+        ? Results.NoContent()
+        : MapErrorToHttpStatus(result.Error);
+    
+    private static IResult MapErrorToHttpStatus(Error error) => error.Type switch
+    {
+        ErrorType.NotFound => Results.NotFound(error),
+        ErrorType.Validation => Results.BadRequest(error),
+        ErrorType.Conflict => Results.Conflict(error),
+        _ => throw new InvalidOperationException("Unhandled ErrorType mapping")
+    };
+}
+```
 
 // Registration in Program.cs
 var cafes = app.MapGroup("/api/cafes/{cafeId:int}").WithOpenApi();
@@ -633,10 +865,11 @@ menus.MapUpdateMenu();
 - Apply common metadata with .WithOpenApi() and .WithTags()
 - Use endpoint filters for cross-cutting concerns (validation, logging)
 - Leverage parameter binding (route, query, body, services)
-- Use Results.* methods for consistent responses
+- **Use Result extensions** for consistent HTTP responses (ToApiResult, ToCreatedResult, ToNoContentResult)
 - Configure Swagger/OpenAPI with endpoint descriptions
 - Use typed results for better documentation
 - Enable ProblemDetails for standardized error responses
+- **No try-catch blocks in endpoints** - Result pattern handles errors
 
 **Program.cs Structure:**
 ```csharp

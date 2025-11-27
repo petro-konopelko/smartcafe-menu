@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -7,4 +8,4 @@ public record CreateMenuRequest(
     Guid CafeId,
     string Name,
     List<SectionDto> Sections
-) : ICommand<CreateMenuResponse>;
+) : ICommand<Result<CreateMenuResponse>>;

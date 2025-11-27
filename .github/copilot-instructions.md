@@ -33,14 +33,75 @@ src/
 ├── SmartCafe.Menu.ServiceDefaults/      # Shared Aspire configuration
 ├── SmartCafe.Menu.Migrator/             # Database migration tool for local development
 ├── SmartCafe.Menu.Domain/               # Core business logic and entities
+│   ├── Entities/                        # Menu, Section, MenuItem, Category, etc.
+│   ├── Events/                          # Domain events (MenuCreated, MenuActivated, etc.)
+│   ├── Exceptions/                      # Domain exceptions (MenuNotFoundException)
+│   ├── Interfaces/                      # IDateTimeProvider
+│   ├── Services/                        # Domain services
+│   └── ValueObjects/                    # Ingredient, AvailabilityHours
 ├── SmartCafe.Menu.Application/          # Use cases, DTOs, interfaces, validators
+│   ├── Common/Results/                  # Result pattern (Result<T>, Error, ErrorType, ErrorDetail, None)
+│   ├── Features/                        # Vertical slices by feature
+│   │   ├── Menus/                       # Menu feature handlers
+│   │   │   ├── ActivateMenu/            # ActivateMenuCommand, ActivateMenuHandler
+│   │   │   ├── CloneMenu/               # CloneMenuRequest, CloneMenuHandler
+│   │   │   ├── CreateMenu/              # CreateMenuRequest, CreateMenuHandler
+│   │   │   ├── DeleteMenu/              # DeleteMenuCommand, DeleteMenuHandler
+│   │   │   ├── GetActiveMenu/           # GetActiveMenuQuery, GetActiveMenuHandler
+│   │   │   ├── GetMenu/                 # GetMenuQuery, GetMenuHandler
+│   │   │   ├── ListMenus/               # ListMenusQuery, ListMenusHandler
+│   │   │   ├── PublishMenu/             # PublishMenuCommand, PublishMenuHandler
+│   │   │   ├── UpdateMenu/              # UpdateMenuRequest, UpdateMenuHandler
+│   │   │   └── Shared/                  # Shared DTOs (MenuSectionDto, MenuItemDto, etc.)
+│   │   └── Images/                      # Image feature handlers
+│   │       ├── UploadImage/             # UploadImageCommand, UploadImageHandler
+│   │       └── Models/                  # Shared image models
+│   ├── Interfaces/                      # Repository interfaces (IMenuRepository, ICategoryRepository)
+│   ├── Mappings/                        # Mapperly mapper classes
+│   ├── Mediation/                       # Mediator pattern implementation
+│   │   ├── Core/                        # IMediator, IHandler interfaces
+│   │   └── Behaviors/                   # ValidationBehavior (wraps FluentValidation)
+│   └── DependencyInjection/             # Application layer service registration
 ├── SmartCafe.Menu.Infrastructure/       # Data access (EF Core), Azure services
+│   ├── Data/                            # EF Core DbContext, configurations
+│   ├── Repositories/                    # Repository implementations
+│   ├── EventBus/                        # Azure Service Bus publisher
+│   ├── BlobStorage/                     # Azure Blob Storage service
+│   ├── Services/                        # DateTimeProvider, ImageProcessingService
+│   ├── Migrations/                      # EF Core migrations
+│   └── DependencyInjection/             # Infrastructure layer service registration
 └── SmartCafe.Menu.API/                  # Minimal API endpoints, filters, middleware
     ├── Endpoints/                       # Vertical slices by feature
-    │   ├── Menus/
-    │   ├── Categories/
-    │   └── EndpointExtensions.cs
-    └── Filters/                         # Endpoint filters
+    │   ├── Menus/                       # Menu endpoints
+    │   │   ├── ActivateMenuEndpoint.cs  # POST /menus/{menuId}/activate
+    │   │   ├── CloneMenuEndpoint.cs     # POST /menus/{menuId}/clone
+    │   │   ├── CreateMenuEndpoint.cs    # POST /menus
+    │   │   ├── DeleteMenuEndpoint.cs    # DELETE /menus/{menuId}
+    │   │   ├── GetActiveMenuEndpoint.cs # GET /menus/active
+    │   │   ├── GetMenuEndpoint.cs       # GET /menus/{menuId}
+    │   │   ├── ListMenusEndpoint.cs     # GET /menus
+    │   │   ├── PublishMenuEndpoint.cs   # POST /menus/{menuId}/publish
+    │   │   └── UpdateMenuEndpoint.cs    # PUT /menus/{menuId}
+    │   └── Images/                      # Image endpoints
+    │       └── UploadImageEndpoint.cs   # POST /menus/{menuId}/items/{itemId}/image
+    ├── Extensions/                      # Extension methods
+    │   ├── ResultExtensions.cs          # Result → HTTP mapping (ToApiResult, ToCreatedResult)
+    │   └── WebApplicationExtensions.cs  # Endpoint registration helpers
+    ├── Filters/                         # Endpoint filters
+    │   └── ValidationFilter.cs          # Validation filter (FluentValidation)
+    ├── Middleware/                      # Middleware
+    │   └── ExceptionHandlingMiddleware.cs # Global exception handler (unexpected errors)
+    └── Program.cs                       # Application startup
+
+tests/
+├── SmartCafe.Menu.UnitTests/
+│   ├── Application/                     # Handler tests
+│   ├── Domain/                          # Entity tests
+│   └── Fakes/                           # FakeDateTimeProvider, etc.
+└── SmartCafe.Menu.IntegrationTests/
+    ├── Api/                             # API integration tests
+    ├── Endpoints/                       # Endpoint tests
+    └── Fixtures/                        # Test fixtures (WebApplicationFactory)
 ```
 
 ## Code Style & Guidelines
@@ -87,6 +148,10 @@ src/
 - Keep business logic in domain or application services
 - Interfaces define contracts (repositories, services)
 - Use vertical slice organization (group by feature, not layer)
+- **All handlers return `Result<T>` or `Result`** - never throw exceptions for business errors
+- Handler interface: `ICommandHandler<TRequest, Result<TResponse>>` or `IQueryHandler<TRequest, Result<TResponse>>`
+- Use `Result.Success()` for void operations, `Result<T>.Success(value)` for value returns
+- Use `Result.Failure(Error.NotFound/Validation/Conflict(...))` for errors
 
 ### Infrastructure Layer
 - Implement repositories using Entity Framework Core with PostgreSQL
@@ -102,20 +167,23 @@ src/
 
 ### API Layer (Minimal API)
 - Use Minimal API endpoints with route groups for organization
-- Implement endpoint filters for validation, logging, exception handling
+- Implement endpoint filters for validation and logging
 - RESTful API design with route constraints (e.g., `{cafeId:guid}`)
 - Use standard HTTP status codes
 - Return DTOs, never domain entities
-- Use `Results.*` methods for responses (Results.Ok, Results.Created, etc.)
+- **Use Result extension methods** (`ToApiResult()`, `ToCreatedResult()`, `ToNoContentResult()`)
 - Add `.WithOpenApi()` for Swagger documentation
 - Enable CORS for frontend origins
+- **No try-catch blocks** - Result pattern handles errors
 - Endpoint pattern:
   ```csharp
   public static RouteGroupBuilder MapCreateMenu(this RouteGroupBuilder group)
   {
-      group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, ...) => 
+      group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, IMediator mediator, CancellationToken ct) => 
       {
-          // Implementation
+          var command = request with { CafeId = cafeId };
+          var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
+          return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
       })
       .WithName("CreateMenu")
       .WithOpenApi();
@@ -204,20 +272,94 @@ Events should include:
 - Mock `IDateTimeProvider` to freeze time in tests (use `FakeDateTimeProvider`)
 - Use Testcontainers for PostgreSQL in integration tests
 - Test Minimal API endpoints using `WebApplicationFactory`
-- Test endpoint filters (validation, exception handling, logging)
+- Test endpoint filters (validation, logging)
 - Mock external dependencies (blob storage, service bus, Key Vault)
 - Aim for high code coverage on business logic
 - Test validation rules thoroughly (FluentValidation)
 - Test domain events are raised correctly
 - Test unique constraints (one active menu per cafe)
 - Test menu activation workflow (deactivates previous active menu)
+- Test Result pattern success and failure paths
 
-## Error Handling
+## Error Handling - Result Pattern
 
-- Use custom exceptions in Domain layer (e.g., `MenuNotFoundException`)
-- Map exceptions to appropriate HTTP status codes in middleware
+**This project uses the Result pattern to eliminate exception-based error handling in the application layer.**
+
+### Result Pattern Structure
+- `Result<T>` (non-sealed base class) - Generic result with value
+- `Result` (sealed class inheriting `Result<None>`) - Result for void operations
+- `None` (sealed singleton) - Represents "no return value" (use `None.Instance`)
+- `Error` - Error envelope containing `ErrorType` and list of `ErrorDetail`
+- `ErrorType` enum - Application-level error types: `NotFound`, `Validation`, `Conflict`
+- `ErrorDetail` record - Individual error: `Message`, `Code?`, `Field?`
+
+### Handler Implementation
+```csharp
+public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
+{
+    public async Task<Result<CreateMenuResponse>> HandleAsync(CreateMenuRequest request, CancellationToken ct)
+    {
+        // NotFound error
+        if (menu == null)
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
+                $"Menu with ID {id} not found", 
+                "MENU_NOT_FOUND"));
+        
+        // Validation error (multiple details supported)
+        if (missingCategories.Any())
+            return Result<CreateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail("Categories not found", "CATEGORIES_NOT_FOUND")));
+        
+        // Conflict error
+        if (menu.IsActive)
+            return Result<CreateMenuResponse>.Failure(Error.Conflict(
+                "Menu is already active", 
+                "MENU_ALREADY_ACTIVE"));
+        
+        // Success
+        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
+    }
+}
+```
+
+### Endpoint Implementation
+```csharp
+public static RouteGroupBuilder MapCreateMenu(this RouteGroupBuilder group)
+{
+    group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, IMediator mediator, CancellationToken ct) =>
+    {
+        var command = request with { CafeId = cafeId };
+        var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
+        return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
+    })
+    .WithName("CreateMenu")
+    .WithOpenApi();
+    return group;
+}
+```
+
+### Result Extension Methods (API Layer)
+- `result.ToApiResult()` → Maps to `Ok(200)` or error status
+- `result.ToCreatedResult(response => location)` → Maps to `Created(201, location)` or error status (uses factory delegate for safe access)
+- `result.ToNoContentResult()` → Maps to `NoContent(204)` or error status
+
+### Error Status Mapping
+- `ErrorType.NotFound` → `404 Not Found`
+- `ErrorType.Validation` → `400 Bad Request`
+- `ErrorType.Conflict` → `409 Conflict`
+- Unknown types → throws exception (fail-fast)
+
+### ValidationBehavior Integration
+- `ValidationBehavior<TRequest, T>` automatically wraps FluentValidation errors
+- Returns `Result<T>.Failure(Error.Validation(...))` with all validation errors
+- Zero reflection - works with `Result<T>` constraint
+
+### Guidelines
+- **NEVER throw exceptions** in application layer handlers for business errors
+- Return `Result.Failure()` with appropriate `ErrorType` instead
+- Use domain exceptions only for truly exceptional cases (not found in handlers)
+- Middleware handles unexpected exceptions (500 Internal Server Error)
 - Log all errors with context
-- Return consistent error response format
 - Never expose stack traces in production
 
 ## Security & Access Control

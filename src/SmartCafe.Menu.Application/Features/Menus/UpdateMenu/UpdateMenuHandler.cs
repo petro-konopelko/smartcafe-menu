@@ -1,9 +1,9 @@
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Events;
-using SmartCafe.Menu.Domain.Exceptions;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
@@ -13,24 +13,20 @@ public class UpdateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuRequest, UpdateMenuResponse>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuRequest, Result<UpdateMenuResponse>>
 {
 
-    public async Task<UpdateMenuResponse> HandleAsync(
+    public async Task<Result<UpdateMenuResponse>> HandleAsync(
         UpdateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
         // Load existing menu
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
-        if (menu == null)
+        if (menu == null || menu.CafeId != request.CafeId)
         {
-            throw new MenuNotFoundException(request.MenuId);
-        }
-
-        // Verify cafe ownership
-        if (menu.CafeId != request.CafeId)
-        {
-            throw new MenuNotFoundException(request.MenuId);
+            return Result<UpdateMenuResponse>.Failure(Error.NotFound(
+                $"Menu with ID {request.MenuId} not found",
+                "MENU_NOT_FOUND"));
         }
 
         // Validate all category IDs exist
@@ -40,7 +36,11 @@ public class UpdateMenuHandler(
             .Distinct()
             .ToList();
 
-        await ValidateCategoriesExist(allCategoryIds, cancellationToken);
+        var categoryValidation = await ValidateCategoriesExist(allCategoryIds, cancellationToken);
+        if (categoryValidation != null)
+        {
+            return categoryValidation;
+        }
 
         // Capture timestamp once for consistency across all updates
         var now = dateTimeProvider.UtcNow;
@@ -77,21 +77,21 @@ public class UpdateMenuHandler(
         );
         await eventPublisher.PublishAsync(domainEvent, cancellationToken);
 
-        return new UpdateMenuResponse(
+        return Result<UpdateMenuResponse>.Success(new UpdateMenuResponse(
             updatedMenu.Id,
             updatedMenu.CafeId,
             updatedMenu.Name,
             updatedMenu.IsActive,
             updatedMenu.IsPublished,
             updatedMenu.UpdatedAt
-        );
+        ));
     }
 
-    private async Task ValidateCategoriesExist(List<Guid> categoryIds, CancellationToken cancellationToken)
+    private async Task<Result<UpdateMenuResponse>?> ValidateCategoriesExist(List<Guid> categoryIds, CancellationToken cancellationToken)
     {
         if (!categoryIds.Any())
         {
-            return;
+            return null;
         }
 
         var foundCategories = await categoryRepository.GetByIdsAsync(categoryIds, cancellationToken);
@@ -99,8 +99,11 @@ public class UpdateMenuHandler(
 
         if (missingCategoryIds.Any())
         {
-            throw new InvalidOperationException($"Categories not found: {string.Join(", ", missingCategoryIds)}");
+            return Result<UpdateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", "CATEGORIES_NOT_FOUND")));
         }
+
+        return null;
     }
 
     private void BuildMenuStructure(

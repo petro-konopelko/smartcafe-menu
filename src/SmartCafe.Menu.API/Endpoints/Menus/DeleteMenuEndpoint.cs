@@ -1,3 +1,5 @@
+using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.Application.Common.Results;
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 
@@ -13,22 +15,15 @@ public static class DeleteMenuEndpoint
             IMediator mediator,
             CancellationToken ct) =>
         {
-            try
-            {
-                var command = new DeleteMenuCommand(cafeId, menuId);
-                await mediator.Send<DeleteMenuCommand, DeleteMenuResponse>(command, ct);
-                return Results.NoContent();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(new { message = ex.Message });
-            }
+            var command = new DeleteMenuCommand(cafeId, menuId);
+            var result = await mediator.Send<DeleteMenuCommand, Result>(command, ct);
+            return result.ToNoContentResult();
         })
         .WithName("DeleteMenu")
         .WithSummary("Delete a draft menu (published menus cannot be deleted)")
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status404NotFound)
+        .Produces(StatusCodes.Status409Conflict);
 
         return group;
     }
