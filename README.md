@@ -142,12 +142,12 @@ All handlers return `Result<T>` instead of throwing exceptions:
 ```csharp
 public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
 {
-    public async Task<Result<CreateMenuResponse>> HandleAsync(...)
+    public async Task<Result<CreateMenuResponse>> HandleAsync(CreateMenuRequest request, CancellationToken ct)
     {
-        // Return errors instead of throwing
+        // Existence check → 404 Not Found
         if (menu == null)
             return Result<CreateMenuResponse>.Failure(Error.NotFound(
-                "Menu not found", "MENU_NOT_FOUND"));
+                "Menu not found", ErrorCodes.MenuNotFound));
         
         // Return success with value
         return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
@@ -157,19 +157,93 @@ public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<Creat
 
 **Endpoints use Result extensions:**
 ```csharp
-group.MapPost("/", async (CreateMenuRequest request, IMediator mediator, CancellationToken ct) => 
+group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, IMediator mediator, CancellationToken ct) => 
 {
-    var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(request, ct);
-    return result.ToCreatedResult($"/api/menus/{result.Value!.Id}"); // Auto-maps errors to HTTP status
+    var command = request with { CafeId = cafeId };
+    var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
+    // Factory delegate ensures safe access to response.Id only on success
+    return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
 })
 .WithName("CreateMenu")
-.WithOpenApi();
+.WithSummary("Create a new menu in draft state");
 ```
 
 **Error Types:**
 - `Error.NotFound()` → 404 Not Found
 - `Error.Validation()` → 400 Bad Request
 - `Error.Conflict()` → 409 Conflict
+
+### Validation Architecture
+
+The project uses a **two-tier validation strategy** for clean separation of concerns:
+
+**1. Format Validation (FluentValidation → 400 Bad Request)**
+- Handled by `AbstractValidator<T>` classes
+- Validates: required fields, string length, format, range
+- Uses centralized `ValidationMessages` constants
+- Executed automatically by `ValidationBehavior<TRequest, T>` before handler execution
+- Returns `Result<T>.Failure(Error.Validation(...))` with all validation errors
+
+**2. Existence & Business Rule Validation (Handlers → 404/409)**
+- Handled directly in command/query handlers
+- Validates: entity existence, business rules, state transitions
+- Uses centralized `ErrorCodes` constants
+- Returns `Result<T>.Failure(Error.NotFound/Conflict(...))`
+
+**Example - ValidationMessages:**
+```csharp
+public static class ValidationMessages
+{
+    public const string CafeIdRequired = "Cafe ID is required.";
+    public const string MenuNameRequired = "Menu name is required.";
+    public const string MenuNameMaxLength = "Menu name must not exceed 200 characters.";
+    // ... 20+ constants
+}
+
+public class CreateMenuValidator : AbstractValidator<CreateMenuRequest>
+{
+    public CreateMenuValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage(ValidationMessages.MenuNameRequired)
+            .MaximumLength(200).WithMessage(ValidationMessages.MenuNameMaxLength);
+    }
+}
+```
+
+**Example - ErrorCodes:**
+```csharp
+public static class ErrorCodes
+{
+    public const string CafeNotFound = "CAFE_NOT_FOUND";
+    public const string MenuNotFound = "MENU_NOT_FOUND";
+    public const string MenuAlreadyActive = "MENU_ALREADY_ACTIVE";
+    // ... 10+ constants
+}
+
+public class ActivateMenuHandler
+{
+    public async Task<Result> HandleAsync(ActivateMenuCommand command, CancellationToken ct)
+    {
+        // Existence check → 404
+        if (menu == null)
+            return Result.Failure(Error.NotFound(
+                "Menu not found", ErrorCodes.MenuNotFound));
+        
+        // Business rule → 409
+        if (menu.IsActive)
+            return Result.Failure(Error.Conflict(
+                "Menu is already active", ErrorCodes.MenuAlreadyActive));
+    }
+}
+```
+
+**Benefits:**
+- Clear separation: format vs business logic
+- Centralized messages → easy to update
+- No string duplication across validators/handlers
+- Testable: mock validators or handlers independently
+- Consistent error responses
 
 ### IDateTimeProvider
 
@@ -268,20 +342,20 @@ See [Swagger UI](http://localhost:5000/swagger) for complete API documentation.
 ## 🏛️ Clean Architecture Implementation
 
 ### Handler Pattern
-All endpoints follow the **Handler Pattern** for separation of concerns:
+All endpoints follow the **Handler Pattern** with **Result Pattern** for separation of concerns:
 
 **Endpoint Responsibilities** (thin, 20-50 lines):
-- Validate input using FluentValidation
-- Call handler with parsed parameters
-- Map handler results to HTTP responses
-- Catch exceptions and return appropriate status codes
+- Receive HTTP requests and extract parameters
+- Call mediator to execute handler
+- Map Result<T> to HTTP responses using extension methods
+- NO try-catch blocks (Result pattern handles errors)
 
 **Handler Responsibilities** (business logic):
 - Execute business logic
 - Coordinate repositories and services
-- Validate business rules
+- Validate existence and business rules
 - Publish domain events
-- Return DTOs
+- Return Result<T> (never throw exceptions for business errors)
 
 **Example**:
 ```csharp
@@ -291,21 +365,16 @@ public static RouteGroupBuilder MapPublishMenu(this RouteGroupBuilder group)
     group.MapPost("/{menuId:guid}/publish", async (
         Guid cafeId,
         Guid menuId,
-        PublishMenuHandler handler,
+        PublishMenuCommand command,
+        IMediator mediator,
         CancellationToken ct) =>
     {
-        try
-        {
-            var result = await handler.HandleAsync(cafeId, menuId, ct);
-            return Results.Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new { message = ex.Message });
-        }
+        var publishCommand = new PublishMenuCommand(cafeId, menuId);
+        var result = await mediator.Send<PublishMenuCommand, Result>(publishCommand, ct);
+        return result.ToNoContentResult(); // Auto-maps errors to HTTP status
     })
     .WithName("PublishMenu")
-    .Produces<PublishMenuResponse>(StatusCodes.Status200OK);
+    .WithSummary("Publish a draft menu to make it ready for activation");
     
     return group;
 }
@@ -315,58 +384,68 @@ public class PublishMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IEventPublisher eventPublisher,
-    IDateTimeProvider dateTimeProvider)
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, Result>
 {
-    public async Task<PublishMenuResponse> HandleAsync(
-        Guid cafeId, Guid menuId, CancellationToken cancellationToken)
+    public async Task<Result> HandleAsync(
+        PublishMenuCommand command, CancellationToken cancellationToken)
     {
-        var menu = await menuRepository.GetByIdAsync(menuId, cancellationToken);
+        var menu = await menuRepository.GetByIdAsync(command.MenuId, cancellationToken);
         
-        if (menu == null || menu.CafeId != cafeId)
-            throw new InvalidOperationException("Menu not found");
-            
+        // Existence check → 404 Not Found
+        if (menu == null || menu.CafeId != command.CafeId)
+            return Result.Failure(Error.NotFound(
+                "Menu not found", ErrorCodes.MenuNotFound));
+        
+        // Business rule checks → 409 Conflict
         if (menu.IsPublished)
-            throw new InvalidOperationException("Menu is already published");
-            
-        if (menu.Sections.Count == 0)
-            throw new InvalidOperationException("Menu must have at least one section");
+            return Result.Failure(Error.Conflict(
+                "Menu is already published", ErrorCodes.MenuAlreadyPublished));
         
+        if (menu.Sections.Count == 0)
+            return Result.Failure(Error.Conflict(
+                "Menu must have at least one section", ErrorCodes.MenuHasNoSections));
+        
+        // Business logic
         menu.IsPublished = true;
         menu.PublishedAt = dateTimeProvider.UtcNow;
         
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         
+        // Publish domain event
         await eventPublisher.PublishAsync(
-            new MenuPublishedEvent(Guid.CreateVersion7(), menuId, cafeId, menu.Name, dateTimeProvider.UtcNow),
+            new MenuPublishedEvent(Guid.CreateVersion7(), menu.Id, menu.CafeId, menu.Name, dateTimeProvider.UtcNow),
             cancellationToken);
         
-        return new PublishMenuResponse(menu.Id, menu.Name, menu.IsPublished, menu.PublishedAt);
+        return Result.Success();
     }
 }
 ```
 
 ### Implemented Handlers
 
-**Menu Handlers**:
-- `UpsertMenuHandler` - Create or update complete menu structure
-- `ActivateMenuHandler` - Activate a published menu
-- `PublishMenuHandler` - Publish a draft menu
-- `DeleteMenuHandler` - Delete draft menus with images
-- `GetMenuHandler` - Retrieve menu details
-- `ListMenusHandler` - List all menus for a cafe
-- `GetActiveMenuHandler` - Get currently active menu
+All handlers follow the **Result Pattern** - returning `Result<T>` instead of throwing exceptions.
 
-**Category Handlers**:
-- `CreateCategoryHandler` - Create custom categories
-- `UpdateCategoryHandler` - Update category details
-- `DeleteCategoryHandler` - Delete unused categories
-- `ListCategoriesHandler` - List all categories
+**Menu Handlers** (Application/Features/Menus/):
+- `CreateMenuHandler` - Create new menu in draft state
+- `UpdateMenuHandler` - Update existing menu structure
+- `DeleteMenuHandler` - Delete draft menus with blob cleanup
+- `GetMenuHandler` - Retrieve menu details by ID
+- `GetActiveMenuHandler` - Get currently active menu for customers
+- `ListMenusHandler` - List all menus for a cafe with pagination
+- `ActivateMenuHandler` - Activate a published menu (deactivates previous)
+- `PublishMenuHandler` - Publish a draft menu (ready for activation)
+- `CloneMenuHandler` - Clone existing menu to create variations
 
-**Image Handlers**:
-- `UploadImageHandler` - Upload and process menu item images
+**Image Handlers** (Application/Features/Images/):
+- `UploadImageHandler` - Upload and process menu item images to Azure Blob Storage
 
-All handlers are registered in `Program.cs` DI container for injection into endpoints.
+All handlers:
+- Return `Result<T>` or `Result` (never throw business exceptions)
+- Use `ErrorCodes` constants for consistent error codes
+- Use `IDateTimeProvider` for testable timestamps
+- Publish domain events via `IEventPublisher`
+- Are registered in DI container via `ApplicationServiceRegistration`
 
 ## 🔄 CI/CD Pipeline
 
