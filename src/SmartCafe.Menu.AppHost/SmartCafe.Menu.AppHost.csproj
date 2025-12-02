@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" />
     <ProjectReference Include="..\SmartCafe.Menu.API\SmartCafe.Menu.API.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.Migrator\SmartCafe.Menu.Migrator.csproj" />
   </ItemGroup>
