@@ -79,7 +79,7 @@ jobs:
         fail-on-error: false
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: ${{ inputs.test-results-artifact-name }}
@@ -87,7 +87,7 @@ jobs:
         retention-days: 7
     
     - name: Upload coverage results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: ${{ inputs.coverage-artifact-name }}
