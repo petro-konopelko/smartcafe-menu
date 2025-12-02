@@ -70,6 +70,7 @@ jobs:
           ci
           chore
           revert
+          deps
         requireScope: false
 
     - name: Label PR size
