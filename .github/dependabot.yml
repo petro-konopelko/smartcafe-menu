@@ -47,6 +47,10 @@ updates:
       fluentvalidation:
         patterns:
           - "FluentValidation*"
+      # Serilog
+      serilog:
+        patterns:
+        - "Serilog*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
