@@ -36,6 +36,7 @@ updates:
           - "xunit*"
           - "NSubstitute*"
           - "coverlet.*"
+          - "Testcontainers*"
           - "Microsoft.NET.Test.Sdk"
       # Group EF Core packages together
       efcore:
