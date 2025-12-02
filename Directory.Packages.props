@@ -34,7 +34,7 @@
     <!-- Validation & Mapping -->
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <PackageVersion Include="Riok.Mapperly" Version="4.1.0" />
+    <PackageVersion Include="Riok.Mapperly" Version="4.3.0" />
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <!-- Logging -->
     <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
