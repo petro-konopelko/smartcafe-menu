@@ -39,6 +39,14 @@ updates:
         patterns:
           - "Microsoft.EntityFrameworkCore*"
           - "Npgsql.EntityFrameworkCore*"
+      # Aspire packages
+      aspire:
+        patterns:
+          - "Aspire*"
+      # Fluent validation
+      fluentvalidation:
+        patterns:
+          - "FluentValidation*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
