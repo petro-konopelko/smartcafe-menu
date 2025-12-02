@@ -42,7 +42,7 @@ jobs:
         reporttypes: 'Html;MarkdownSummary;TextSummary'
     
     - name: Upload coverage HTML report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-report-html
         path: coveragereport
