@@ -24,6 +24,8 @@ updates:
         patterns:
           - "Microsoft.*"
           - "System.*"
+          - "!Microsoft.NET.Test.Sdk"
+          - "!Microsoft.EntityFrameworkCore*"
       # Group Azure packages together
       azure:
         patterns:
@@ -32,8 +34,9 @@ updates:
       testing:
         patterns:
           - "xunit*"
-          - "NSubstitute"
+          - "NSubstitute*"
           - "coverlet.*"
+          - "Microsoft.NET.Test.Sdk"
       # Group EF Core packages together
       efcore:
         patterns:
