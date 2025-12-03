@@ -23,6 +23,8 @@ public sealed class ValidationBehavior<TRequest, T> : IPipelineBehavior<TRequest
         RequestHandlerDelegate<Result<T>> next,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(next);
+
         if (!_validators.Any())
         {
             return await next();

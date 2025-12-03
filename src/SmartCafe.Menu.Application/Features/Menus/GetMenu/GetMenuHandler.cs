@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Features.Menus.GetMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -12,6 +13,8 @@ public class GetMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetM
         GetMenuQuery request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
         if (menu == null || menu.CafeId != request.CafeId)
@@ -21,35 +24,6 @@ public class GetMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetM
                 ErrorCodes.MenuNotFound));
         }
 
-        return Result<GetMenuResponse>.Success(new GetMenuResponse(
-            menu.Id,
-            menu.Name,
-            menu.IsActive,
-            menu.IsPublished,
-            menu.Sections.Select(s => new MenuSectionDto(
-                s.Id,
-                s.Name,
-                s.AvailableFrom,
-                s.AvailableTo,
-                s.DisplayOrder,
-                s.Items.Select(i => new MenuItemDto(
-                    i.Id,
-                    i.Name,
-                    i.Description,
-                    i.Price,
-                    i.ImageBigUrl,
-                    i.ImageCroppedUrl,
-                    i.IsActive,
-                    i.MenuItemCategories.Select(c => c.CategoryId).ToList(),
-                    i.IngredientOptions.Select(ing => new IngredientDto(
-                        ing.Name,
-                        ing.IsExcludable,
-                        ing.IsIncludable
-                    )).ToList()
-                )).ToList()
-            )).ToList(),
-            menu.CreatedAt,
-            menu.UpdatedAt
-        ));
+        return Result<GetMenuResponse>.Success(menu.ToGetMenuResponse());
     }
 }

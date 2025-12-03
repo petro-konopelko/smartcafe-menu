@@ -3,7 +3,6 @@ using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Common;
-using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
@@ -12,13 +11,15 @@ public class DeleteMenuHandler(
     IMenuRepository menuRepository,
     IImageStorageService imageStorageService,
     IUnitOfWork unitOfWork,
-    IEventPublisher eventPublisher,
+    IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<DeleteMenuCommand, Result>
 {
     public async Task<Result> HandleAsync(
         DeleteMenuCommand request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
         if (menu == null || menu.CafeId != request.CafeId)
@@ -28,26 +29,19 @@ public class DeleteMenuHandler(
                 ErrorCodes.MenuNotFound));
         }
 
-        if (menu.IsPublished)
-        {
-            return Result.Failure(Error.Conflict(
-                "Cannot delete a published menu. Only draft menus can be deleted.",
-                ErrorCodes.MenuAlreadyPublished));
-        }
+        var deletion = menu.SoftDelete(dateTimeProvider);
+        if (deletion.IsFailure)
+            return Result.Failure(deletion.Error!);
 
-        await menuRepository.DeleteAsync(menu, cancellationToken);
+        await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Delete all menu images from storage
         await imageStorageService.DeleteMenuImagesAsync(request.CafeId, request.MenuId, cancellationToken);
 
-        var deletedEvent = new MenuDeletedEvent(
-            Guid.CreateVersion7(),
-            request.MenuId,
-            request.CafeId,
-            dateTimeProvider.UtcNow
-        );
-        await eventPublisher.PublishAsync(deletedEvent, cancellationToken);
+        var events = menu.DomainEvents.ToList();
+        menu.ClearDomainEvents();
+        await eventDispatcher.DispatchAsync(events, cancellationToken);
 
         return Result.Success();
     }

@@ -17,6 +17,8 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.UseEnvironment("Development");
 
         builder.ConfigureServices(services =>

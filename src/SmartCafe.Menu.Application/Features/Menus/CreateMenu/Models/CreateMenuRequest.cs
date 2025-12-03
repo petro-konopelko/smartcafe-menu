@@ -7,5 +7,6 @@ namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 public record CreateMenuRequest(
     Guid CafeId,
     string Name,
-    List<SectionDto> Sections
+    List<SectionDto> Sections,
+    bool Publish = false
 ) : ICommand<Result<CreateMenuResponse>>;

@@ -6,6 +6,9 @@ public class ValidationFilter : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(next);
+
         foreach (var arg in context.Arguments)
         {
             if (arg is null)

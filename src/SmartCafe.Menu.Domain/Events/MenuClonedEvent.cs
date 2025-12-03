@@ -1,11 +1,9 @@
 namespace SmartCafe.Menu.Domain.Events;
 
-public record MenuClonedEvent(
-    Guid EventId,
+public sealed record MenuClonedEvent(
+    DateTime Timestamp,
     Guid OriginalMenuId,
     Guid NewMenuId,
     Guid CafeId,
-    string NewMenuName,
-    DateTime Timestamp,
-    string EventType = "MenuCloned"
-);
+    string NewMenuName
+) : DomainEvent(Timestamp, nameof(MenuClonedEvent));

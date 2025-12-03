@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
@@ -5,7 +6,6 @@ using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Common;
 using SmartCafe.Menu.Domain.Entities;
-using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
@@ -15,14 +15,16 @@ public class CreateMenuHandler(
     IMenuRepository menuRepository,
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
-    IEventPublisher eventPublisher,
+    IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
 {
     public async Task<Result<CreateMenuResponse>> HandleAsync(
         CreateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Validate cafe exists
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Check cafe exists
         var cafeExists = await cafeRepository.ExistsAsync(request.CafeId, cancellationToken);
         if (!cafeExists)
         {
@@ -38,45 +40,26 @@ public class CreateMenuHandler(
             return categoryValidation;
         }
 
-        // Create menu entity
-        var now = dateTimeProvider.UtcNow;
-        var menu = new Domain.Entities.Menu
+        var menu = Domain.Entities.Menu.CreateDraft(request.CafeId, request.Name, dateTimeProvider);
+
+        if (menu.IsFailure)
         {
-            Id = Guid.CreateVersion7(),
-            CafeId = request.CafeId,
-            Name = request.Name,
-            IsActive = false,
-            IsPublished = false,
-            CreatedAt = now,
-            UpdatedAt = now,
-            Sections = []
-        };
+            return Result<CreateMenuResponse>.Failure(menu.Error!);
+        }
 
         // Build sections and items
-        BuildMenuStructure(menu, request.Sections, now);
-
+        var now = dateTimeProvider.UtcNow;
+        BuildMenuStructure(menu.Value!, request.Sections, now);
         // Save to database
-        await menuRepository.CreateAsync(menu, cancellationToken);
+        await menuRepository.CreateAsync(menu.Value!, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Publish event
-        await eventPublisher.PublishAsync(
-            new MenuCreatedEvent(
-                Guid.CreateVersion7(),
-                menu.Id,
-                request.CafeId,
-                menu.Name,
-                now),
-            cancellationToken);
+        // Dispatch domain events
+        var events = menu.Value!.DomainEvents.ToList();
+        menu.Value!.ClearDomainEvents();
+        await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<CreateMenuResponse>.Success(new CreateMenuResponse(
-            menu.Id,
-            menu.CafeId,
-            menu.Name,
-            menu.IsActive,
-            menu.IsPublished,
-            menu.CreatedAt
-        ));
+        return Result<CreateMenuResponse>.Success(menu.Value!.ToCreateMenuResponse());
     }
 
     private async Task<Result<CreateMenuResponse>?> ValidateCategoriesAsync(CreateMenuRequest request, CancellationToken cancellationToken)
@@ -87,7 +70,7 @@ public class CreateMenuHandler(
             .Distinct()
             .ToList();
 
-        if (!allCategoryIds.Any())
+        if (allCategoryIds.Count == 0)
         {
             return null;
         }
@@ -95,7 +78,7 @@ public class CreateMenuHandler(
         var foundCategories = await categoryRepository.GetByIdsAsync(allCategoryIds, cancellationToken);
         var missingCategoryIds = allCategoryIds.Except(foundCategories.Select(c => c.Id)).ToList();
 
-        if (missingCategoryIds.Any())
+        if (missingCategoryIds.Count != 0)
         {
             return Result<CreateMenuResponse>.Failure(Error.Validation(
                 new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)));

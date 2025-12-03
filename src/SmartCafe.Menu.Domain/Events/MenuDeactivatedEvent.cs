@@ -1,9 +1,7 @@
 namespace SmartCafe.Menu.Domain.Events;
 
-public record MenuDeactivatedEvent(
-    Guid EventId,
-    Guid MenuId,
-    Guid CafeId,
+public sealed record MenuDeactivatedEvent(
     DateTime Timestamp,
-    string EventType = "MenuDeactivated"
-);
+    Guid MenuId,
+    Guid CafeId
+) : DomainEvent(Timestamp, nameof(MenuDeactivatedEvent));

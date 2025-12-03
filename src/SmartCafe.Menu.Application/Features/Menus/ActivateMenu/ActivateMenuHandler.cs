@@ -1,3 +1,4 @@
+using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -11,13 +12,15 @@ namespace SmartCafe.Menu.Application.Features.Menus.ActivateMenu;
 public class ActivateMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
-    IEventPublisher eventPublisher,
+    IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<ActivateMenuCommand, Result<ActivateMenuResponse>>
 {
     public async Task<Result<ActivateMenuResponse>> HandleAsync(
         ActivateMenuCommand request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
         if (menu == null || menu.CafeId != request.CafeId)
@@ -27,57 +30,34 @@ public class ActivateMenuHandler(
                 ErrorCodes.MenuNotFound));
         }
 
-        if (!menu.IsPublished)
-        {
-            return Result<ActivateMenuResponse>.Failure(Error.Conflict(
-                "Menu must be published before it can be activated",
-                ErrorCodes.MenuNotPublished));
-        }
-
-        if (menu.IsActive)
-        {
-            return Result<ActivateMenuResponse>.Failure(Error.Conflict(
-                "Menu is already active",
-                ErrorCodes.MenuAlreadyActive));
-        }
-
-        // Deactivate currently active menu
+        // Deactivate currently active menu via domain
         var currentActiveMenu = await menuRepository.GetActiveMenuAsync(request.CafeId, cancellationToken);
         if (currentActiveMenu != null)
         {
-            currentActiveMenu.IsActive = false;
+            var deactivation = currentActiveMenu.Deactivate(dateTimeProvider);
+            if (deactivation.IsFailure)
+                return Result<ActivateMenuResponse>.Failure(deactivation.Error!);
             await menuRepository.UpdateAsync(currentActiveMenu, cancellationToken);
-
-            var deactivatedEvent = new MenuDeactivatedEvent(
-                Guid.CreateVersion7(),
-                currentActiveMenu.Id,
-                request.CafeId,
-                dateTimeProvider.UtcNow
-            );
-            await eventPublisher.PublishAsync(deactivatedEvent, cancellationToken);
         }
 
-        // Activate new menu
-        menu.IsActive = true;
-        menu.ActivatedAt = dateTimeProvider.UtcNow;
+        // Activate new menu via domain
+        var activation = menu.Activate(dateTimeProvider);
+        if (activation.IsFailure)
+            return Result<ActivateMenuResponse>.Failure(activation.Error!);
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Publish activation event
-        var activatedEvent = new MenuActivatedEvent(
-            Guid.CreateVersion7(),
-            menu.Id,
-            request.CafeId,
-            menu.Name,
-            dateTimeProvider.UtcNow
-        );
-        await eventPublisher.PublishAsync(activatedEvent, cancellationToken);
+        var events = new List<DomainEvent>();
+        if (currentActiveMenu != null)
+        {
+            events.AddRange(currentActiveMenu.DomainEvents);
+            currentActiveMenu.ClearDomainEvents();
+        }
+        events.AddRange(menu.DomainEvents);
+        menu.ClearDomainEvents();
+        await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<ActivateMenuResponse>.Success(new ActivateMenuResponse(
-            menu.Id,
-            menu.Name,
-            menu.ActivatedAt.Value
-        ));
+        return Result<ActivateMenuResponse>.Success(menu.ToActivateMenuResponse());
     }
 }

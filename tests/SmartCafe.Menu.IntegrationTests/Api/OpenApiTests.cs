@@ -9,7 +9,7 @@ public class OpenApiTests : IClassFixture<MenuApiFactory>
 
     public OpenApiTests(MenuApiFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory?.CreateClient() ?? throw new ArgumentNullException(nameof(factory));
     }
 
     [Fact]

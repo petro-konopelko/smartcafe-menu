@@ -9,8 +9,10 @@ public class UploadImageHandler(IImageStorageService imageStorageService) : ICom
         UploadImageCommand command,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(command);
+
         // Extract file extension from filename or content type
-        var fileExtension = Path.GetExtension(command.FileName).TrimStart('.');
+        var fileExtension = Path.GetExtension(command.FileName)?.TrimStart('.') ?? string.Empty;
         if (string.IsNullOrEmpty(fileExtension))
         {
             // Fallback to content type

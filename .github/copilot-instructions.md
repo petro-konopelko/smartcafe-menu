@@ -119,7 +119,7 @@ tests/
 - All DateTime values must be in UTC
 - Implement comprehensive logging with Serilog
 - The Serilog should use Two-stage initialization
-- Always include correlation IDs for request tracking
+- Do not propagate custom correlation IDs; rely on built-in request/trace IDs from ASP.NET Core logging and OpenTelemetry
 - Use C# 14 features (primary constructors, collection expressions, etc.)
 - Treat warnings as errors
 - Language version should be latest
@@ -156,7 +156,7 @@ tests/
   - All handlers use error code constants, never string literals
 - Validators are simple, synchronous, and have NO database dependencies
 - Existence validation happens in handlers using repository calls
-- Map entities to DTOs using Mapperly (compile-time source generator)
+- Map entities to DTOs using manual static mappers located next to each feature handler
 - Keep business logic in domain or application services
 - Interfaces define contracts (repositories, services)
 - Use vertical slice organization (group by feature, not layer)
@@ -336,7 +336,7 @@ public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<Creat
         
         // Success
         return Result<CreateMenuResponse>.Success(new CreateMenuResponse(...));
-    }
+│   ├── Features/*/Mappers/              # Manual static mapper classes per feature
 }
 ```
 
@@ -464,7 +464,7 @@ smartcafe-menu-service/
   - Npgsql.EntityFrameworkCore.PostgreSQL
 - **Validation & Mapping:**
   - FluentValidation
-  - Mapperly (compile-time source generator)
+  - (Removed) Mapperly — manual mappers are used per feature
 - **Azure Services:**
   - Azure.Storage.Blobs
   - Azure.Messaging.ServiceBus

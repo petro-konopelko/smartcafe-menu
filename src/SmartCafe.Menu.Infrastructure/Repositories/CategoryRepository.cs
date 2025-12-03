@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Domain.Entities;
-using SmartCafe.Menu.Domain.Interfaces;
 using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 
 namespace SmartCafe.Menu.Infrastructure.Repositories;
 
-public class CategoryRepository(MenuDbContext context, IDateTimeProvider dateTimeProvider) : ICategoryRepository
+public class CategoryRepository(MenuDbContext context) : ICategoryRepository
 {
     public async Task<Category?> GetByIdAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
@@ -31,7 +30,6 @@ public class CategoryRepository(MenuDbContext context, IDateTimeProvider dateTim
 
     public async Task<Category> CreateAsync(Category category, CancellationToken cancellationToken = default)
     {
-        category.GetType().GetProperty(nameof(Category.CreatedAt))!.SetValue(category, dateTimeProvider.UtcNow);
         context.Categories.Add(category);
         return category;
     }

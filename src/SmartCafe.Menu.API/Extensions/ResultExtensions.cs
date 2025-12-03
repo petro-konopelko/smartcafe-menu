@@ -6,6 +6,8 @@ public static class ResultExtensions
 {
     public static IResult ToApiResult<T>(this Result<T> result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccess)
         {
             return Results.Ok(result.Value);
@@ -27,6 +29,9 @@ public static class ResultExtensions
 
     public static IResult ToCreatedResult<T>(this Result<T> result, Func<T, string> locationFactory)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(locationFactory);
+
         if (result.IsSuccess)
         {
             return Results.Created(locationFactory(result.Value!), result.Value);
@@ -36,6 +41,8 @@ public static class ResultExtensions
 
     public static IResult ToNoContentResult(this Result result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+
         if (result.IsSuccess)
         {
             return Results.NoContent();

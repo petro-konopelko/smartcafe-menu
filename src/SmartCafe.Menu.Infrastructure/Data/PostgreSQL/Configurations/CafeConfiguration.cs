@@ -7,6 +7,8 @@ public class CafeConfiguration : IEntityTypeConfiguration<Domain.Entities.Cafe>
 {
     public void Configure(EntityTypeBuilder<Domain.Entities.Cafe> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
