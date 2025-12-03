@@ -1,10 +1,10 @@
+using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Common;
 using SmartCafe.Menu.Domain.Entities;
-using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.UpdateMenu;
@@ -13,7 +13,7 @@ public class UpdateMenuHandler(
     IMenuRepository menuRepository,
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
-    IEventPublisher eventPublisher,
+    IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuRequest, Result<UpdateMenuResponse>>
 {
 
@@ -21,6 +21,8 @@ public class UpdateMenuHandler(
         UpdateMenuRequest request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         // Load existing menu
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
         if (menu == null || menu.CafeId != request.CafeId)
@@ -46,51 +48,33 @@ public class UpdateMenuHandler(
         // Capture timestamp once for consistency across all updates
         var now = dateTimeProvider.UtcNow;
 
-        // Build menu structure with preserved existing data
-        var updatedMenu = new Domain.Entities.Menu
-        {
-            Id = menu.Id,
-            CafeId = menu.CafeId,
-            Name = request.Name,
-            IsActive = menu.IsActive,
-            IsPublished = menu.IsPublished,
-            PublishedAt = menu.PublishedAt,
-            ActivatedAt = menu.ActivatedAt,
-            CreatedAt = menu.CreatedAt,
-            UpdatedAt = now,
-            Sections = []
-        };
+        // Update name via domain
+        var nameUpdate = menu.UpdateName(request.Name, dateTimeProvider);
+        if (nameUpdate.IsFailure)
+            return Result<UpdateMenuResponse>.Failure(nameUpdate.Error!);
 
-        // Build menu structure, passing original menu to preserve existing entity data
-        BuildMenuStructure(updatedMenu, menu, request, now);
+        // Build menu structure in-place, preserving existing entity data
+        BuildMenuStructureInPlace(menu, request, now);
 
-        // Save changes
-        await menuRepository.UpdateAsync(updatedMenu, cancellationToken);
+        // Mark updated to emit event
+        var markUpdated = menu.MarkUpdated(dateTimeProvider);
+        if (markUpdated.IsFailure)
+            return Result<UpdateMenuResponse>.Failure(markUpdated.Error!);
+
+        // Persist changes
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Publish domain event
-        var domainEvent = new MenuUpdatedEvent(
-            Guid.CreateVersion7(),
-            updatedMenu.Id,
-            updatedMenu.CafeId,
-            updatedMenu.Name,
-            now
-        );
-        await eventPublisher.PublishAsync(domainEvent, cancellationToken);
+        // Dispatch domain events directly from menu
+        var events = menu.DomainEvents.ToList();
+        menu.ClearDomainEvents();
+        await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<UpdateMenuResponse>.Success(new UpdateMenuResponse(
-            updatedMenu.Id,
-            updatedMenu.CafeId,
-            updatedMenu.Name,
-            updatedMenu.IsActive,
-            updatedMenu.IsPublished,
-            updatedMenu.UpdatedAt
-        ));
+        return Result<UpdateMenuResponse>.Success(menu.ToUpdateMenuResponse());
     }
 
     private async Task<Result<UpdateMenuResponse>?> ValidateCategoriesExist(List<Guid> categoryIds, CancellationToken cancellationToken)
     {
-        if (!categoryIds.Any())
+        if (categoryIds.Count == 0)
         {
             return null;
         }
@@ -98,7 +82,7 @@ public class UpdateMenuHandler(
         var foundCategories = await categoryRepository.GetByIdsAsync(categoryIds, cancellationToken);
         var missingCategoryIds = categoryIds.Except(foundCategories.Select(c => c.Id)).ToList();
 
-        if (missingCategoryIds.Any())
+        if (missingCategoryIds.Count != 0)
         {
             return Result<UpdateMenuResponse>.Failure(Error.Validation(
                 new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)));
@@ -107,17 +91,19 @@ public class UpdateMenuHandler(
         return null;
     }
 
-    private void BuildMenuStructure(
-        Domain.Entities.Menu updatedMenu,
-        Domain.Entities.Menu originalMenu,
+    private void BuildMenuStructureInPlace(
+        Domain.Entities.Menu menu,
         UpdateMenuRequest request,
         DateTime timestamp)
     {
         // Create lookup maps for existing sections and items to preserve their data
-        var existingSections = originalMenu.Sections.ToDictionary(s => s.Id);
-        var existingItems = originalMenu.Sections
+        var existingSections = menu.Sections.ToDictionary(s => s.Id);
+        var existingItems = menu.Sections
             .SelectMany(s => s.Items)
             .ToDictionary(i => i.Id);
+
+        // Clear and rebuild sections
+        menu.Sections.Clear();
 
         foreach (var sectionDto in request.Sections)
         {
@@ -128,7 +114,7 @@ public class UpdateMenuHandler(
             var section = new Section
             {
                 Id = sectionId,
-                MenuId = updatedMenu.Id,
+                MenuId = menu.Id,
                 Name = sectionDto.Name,
                 DisplayOrder = sectionDto.DisplayOrder,
                 AvailableFrom = sectionDto.AvailableFrom,
@@ -173,7 +159,7 @@ public class UpdateMenuHandler(
                 section.Items.Add(item);
             }
 
-            updatedMenu.Sections.Add(section);
+            menu.Sections.Add(section);
         }
     }
 }

@@ -16,6 +16,9 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
         string fileExtension,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(imageStream);
+        ArgumentNullException.ThrowIfNull(fileExtension);
+
         await _containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
         // Normalize extension

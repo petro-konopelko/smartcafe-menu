@@ -6,6 +6,8 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 {
     public async Task InvokeAsync(HttpContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         try
         {
             await next(context);

@@ -14,6 +14,8 @@ public class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
+
         base.OnModelCreating(modelBuilder);
 
         // Apply configurations

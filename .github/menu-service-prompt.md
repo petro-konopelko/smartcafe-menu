@@ -81,7 +81,7 @@ Create a .NET 10 Web API project for the Menu Service using Clean Architecture p
 - Azure Blob Storage SDK
 - Azure Service Bus SDK
 - FluentValidation for input validation
-- Mapperly for object mapping (compile-time source generator)
+- Manual mapping via feature-local static mappers
 - SixLabors.ImageSharp for image processing
 - Serilog for structured logging
 - OpenTelemetry for observability (traces, metrics, logs)
@@ -379,12 +379,10 @@ Each event should include: eventId, menuId, cafeId, timestamp, eventType, versio
 - Support progressive loading in frontend
 - Use SixLabors.ImageSharp for efficient processing
 
-**Mapperly Configuration:**
-- Use Mapperly source generator for compile-time mapping
-- Create partial mapper classes with [Mapper] attribute
-- Configure custom mappings where needed
-- No runtime reflection overhead
-- Full type safety at compile time
+**Manual Mapping Approach:**
+- Implement small, feature-local static mapper classes next to each handler (e.g., `Features/Menus/CreateMenu/Mappers/CreateMenuMapper.cs`).
+- Map domain entities to response DTOs within these classes for clarity and testability.
+- Avoid inline DTO construction in handlers; call the mapper methods instead.
 
 **OpenTelemetry Configuration:**
 - Configure ActivitySource for distributed tracing
@@ -516,7 +514,7 @@ src/
 │   │       │   └── Models/UploadImageResponse.cs
 │   │       └── Models/                  # Shared image models
 │   ├── Interfaces/                      # IMenuRepository, ICategoryRepository, IEventPublisher
-│   ├── Mappings/                        # Mapperly mapper classes
+│   ├── Features/*/Mappers/              # Manual static mappers per feature
 │   ├── Mediation/                       # Mediator pattern
 │   │   ├── Core/                        # IMediator, ICommandHandler, IQueryHandler
 │   │   └── Behaviors/                   # ValidationBehavior (wraps FluentValidation)
@@ -1132,7 +1130,7 @@ Please generate the complete project structure with all necessary files, configu
 - Endpoint filters for cross-cutting concerns
 - PostgreSQL with Entity Framework Core for data storage
 - **IDateTimeProvider for testable time operations** (all DateTime values in UTC)
-- Mapperly for compile-time mapping
+- Manual mapping via feature-local static mappers
 - FluentValidation for input validation
 - OpenTelemetry for observability
 - .NET Aspire for local development

@@ -1,9 +1,9 @@
+using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Common;
-using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Interfaces;
 
 namespace SmartCafe.Menu.Application.Features.Menus.PublishMenu;
@@ -11,13 +11,15 @@ namespace SmartCafe.Menu.Application.Features.Menus.PublishMenu;
 public class PublishMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
-    IEventPublisher eventPublisher,
+    IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, Result<PublishMenuResponse>>
 {
     public async Task<Result<PublishMenuResponse>> HandleAsync(
         PublishMenuCommand request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
         if (menu == null || menu.CafeId != request.CafeId)
@@ -27,32 +29,19 @@ public class PublishMenuHandler(
                 ErrorCodes.MenuNotFound));
         }
 
-        if (menu.IsPublished)
+        var publish = menu.Publish(dateTimeProvider);
+        if (publish.IsFailure)
         {
-            return Result<PublishMenuResponse>.Failure(Error.Conflict(
-                "Menu is already published",
-                ErrorCodes.MenuAlreadyPublished));
+            return Result<PublishMenuResponse>.Failure(publish.Error!);
         }
-
-        menu.IsPublished = true;
-        menu.PublishedAt = dateTimeProvider.UtcNow;
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var publishedEvent = new MenuPublishedEvent(
-            Guid.CreateVersion7(),
-            menu.Id,
-            request.CafeId,
-            menu.Name,
-            dateTimeProvider.UtcNow
-        );
-        await eventPublisher.PublishAsync(publishedEvent, cancellationToken);
+        var events = menu.DomainEvents.ToList();
+        menu.ClearDomainEvents();
+        await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<PublishMenuResponse>.Success(new PublishMenuResponse(
-            menu.Id,
-            menu.Name,
-            menu.PublishedAt.Value
-        ));
+        return Result<PublishMenuResponse>.Success(menu.ToPublishMenuResponse());
     }
 }

@@ -8,6 +8,8 @@ public class MenuItemCategoryConfiguration : IEntityTypeConfiguration<MenuItemCa
 {
     public void Configure(EntityTypeBuilder<MenuItemCategory> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.HasKey(e => new { e.MenuItemId, e.CategoryId });
 
         builder.HasOne(e => e.MenuItem)

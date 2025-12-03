@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SmartCafe.Menu.Domain.Enums;
 
 namespace SmartCafe.Menu.Infrastructure.Data.PostgreSQL.Configurations;
 
@@ -7,6 +8,8 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
 {
     public void Configure(EntityTypeBuilder<Domain.Entities.Menu> builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
@@ -15,6 +18,10 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
         builder.Property(e => e.Name)
             .IsRequired()
             .HasMaxLength(200);
+
+        builder.Property(e => e.State)
+            .HasConversion<int>()
+            .IsRequired();
 
         builder.HasOne(e => e.Cafe)
             .WithMany()
@@ -28,17 +35,18 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
 
         // Index for common query patterns
         builder.HasIndex(e => new { e.CafeId, e.CreatedAt });
-        builder.HasIndex(e => new { e.CafeId, e.IsDeleted });
-        builder.HasIndex(e => new { e.CafeId, e.IsActive });
-        builder.HasIndex(e => new { e.CafeId, e.IsPublished });
+        builder.HasIndex(e => new { e.CafeId, e.State });
 
         // Unique partial index: Only one active menu per cafe
         builder.HasIndex(e => e.CafeId)
             .IsUnique()
-            .HasFilter("\"IsActive\" = true AND \"IsDeleted\" = false")
+            .HasFilter($"\"State\" = {(int)MenuState.Active}")
             .HasDatabaseName("UX_Menus_CafeId_Active");
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.State != MenuState.Deleted);
+
+        // Ignore domain events collection (not persisted)
+        builder.Ignore(e => e.DomainEvents);
     }
 }

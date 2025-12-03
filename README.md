@@ -10,7 +10,7 @@ A .NET 10 microservice for managing digital menus in the SmartCafe smart orderin
 - **Clean Architecture** with Vertical Slice Architecture
 - **Result Pattern**: Zero exception-based error handling in application layer
 - **Domain Layer**: Entities, value objects, domain events
-- **Application Layer**: Handlers (return `Result<T>`), DTOs, validators, Mapperly mappers
+- **Application Layer**: Handlers (return `Result<T>`), DTOs, validators, manual per-feature mappers
 - **Infrastructure Layer**: EF Core, PostgreSQL, Azure Blob Storage, Azure Service Bus
 - **API Layer**: ASP.NET Core Minimal API with Result extensions
 
@@ -32,7 +32,7 @@ A .NET 10 microservice for managing digital menus in the SmartCafe smart orderin
 - **ASP.NET Core Minimal API**
 - **Entity Framework Core 10** with PostgreSQL
 - **FluentValidation** for input validation
-- **Mapperly** for compile-time mapping
+- Manual mapping via feature-local static mappers
 - **Azure Blob Storage** for images
 - **Azure Service Bus** for events
 - **Serilog** for structured logging
@@ -109,7 +109,7 @@ smartcafe-menu/
 │   │   │   ├── Menus/
 │   │   │   └── Categories/
 │   │   ├── Interfaces/                  # Repository interfaces
-│   │   ├── Mappings/                    # Mapperly mappers
+│   │   ├── Features/*/Mappers/          # Manual static mappers per feature
 │   │   └── Mediation/                   # Mediator, ValidationBehavior
 │   ├── SmartCafe.Menu.Infrastructure/   # Data access & external services
 │   │   ├── Data/PostgreSQL/             # EF Core DbContext
@@ -425,6 +425,11 @@ public class PublishMenuHandler(
 ### Implemented Handlers
 
 All handlers follow the **Result Pattern** - returning `Result<T>` instead of throwing exceptions.
+
+### Manual Mapping (no Mapperly)
+- Mapping from domain entities to response DTOs is implemented via small, feature-local static mapper classes under each handler folder (e.g., `Features/Menus/CreateMenu/Mappers/CreateMenuMapper.cs`).
+- Handlers call these mappers for response construction instead of inlining DTO creation.
+- Shared DTOs live under `Features/Menus/Shared`, but mapping stays close to the feature for clarity and maintainability.
 
 **Menu Handlers** (Application/Features/Menus/):
 - `CreateMenuHandler` - Create new menu in draft state

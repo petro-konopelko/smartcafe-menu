@@ -49,13 +49,11 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CafeId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    IsPublished = table.Column<bool>(type: "boolean", nullable: false),
+                    State = table.Column<int>(type: "integer", nullable: false),
                     PublishedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ActivatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -199,26 +197,16 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                 columns: new[] { "CafeId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Menus_CafeId_IsActive",
+                name: "IX_Menus_CafeId_State",
                 table: "Menus",
-                columns: new[] { "CafeId", "IsActive" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Menus_CafeId_IsDeleted",
-                table: "Menus",
-                columns: new[] { "CafeId", "IsDeleted" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Menus_CafeId_IsPublished",
-                table: "Menus",
-                columns: new[] { "CafeId", "IsPublished" });
+                columns: new[] { "CafeId", "State" });
 
             migrationBuilder.CreateIndex(
                 name: "UX_Menus_CafeId_Active",
                 table: "Menus",
                 column: "CafeId",
                 unique: true,
-                filter: "\"IsActive\" = true AND \"IsDeleted\" = false");
+                filter: "\"State\" = 2");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sections_MenuId",

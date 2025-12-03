@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddInfrastructure(IConfiguration configuration)
         {
+            ArgumentNullException.ThrowIfNull(configuration);
+
             // Database
             var connectionString = configuration.GetConnectionString("MenuDb")
                 ?? throw new InvalidOperationException("Database connection string 'MenuDb' not configured");
@@ -57,6 +59,11 @@ public static class ServiceCollectionExtensions
             var topicName = configuration["AzureServiceBus:TopicName"] ?? "menu-events";
             services.AddSingleton(sp => new ServiceBusEventPublisher(serviceBusClient, topicName));
             services.AddScoped<IEventPublisher>(sp => sp.GetRequiredService<ServiceBusEventPublisher>());
+
+            // Correlation ID provider is registered in the API layer
+
+            // Domain event dispatcher
+            services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
             return services;
         }

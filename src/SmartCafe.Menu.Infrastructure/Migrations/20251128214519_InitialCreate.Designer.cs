@@ -12,7 +12,7 @@ using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 namespace SmartCafe.Menu.Infrastructure.Migrations
 {
     [DbContext(typeof(MenuDbContext))]
-    [Migration("20251122073313_InitialCreate")]
+    [Migration("20251128214519_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -108,15 +108,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -124,6 +115,9 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -133,15 +127,11 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.HasIndex("CafeId")
                         .IsUnique()
                         .HasDatabaseName("UX_Menus_CafeId_Active")
-                        .HasFilter("\"IsActive\" = true AND \"IsDeleted\" = false");
+                        .HasFilter("\"State\" = 2");
 
                     b.HasIndex("CafeId", "CreatedAt");
 
-                    b.HasIndex("CafeId", "IsActive");
-
-                    b.HasIndex("CafeId", "IsDeleted");
-
-                    b.HasIndex("CafeId", "IsPublished");
+                    b.HasIndex("CafeId", "State");
 
                     b.ToTable("Menus");
                 });
