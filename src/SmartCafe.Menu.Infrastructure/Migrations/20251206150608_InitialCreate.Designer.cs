@@ -12,7 +12,7 @@ using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 namespace SmartCafe.Menu.Infrastructure.Migrations
 {
     [DbContext(typeof(MenuDbContext))]
-    [Migration("20251128214519_InitialCreate")]
+    [Migration("20251206150608_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -148,14 +148,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ImageBigUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("ImageCroppedUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
                     b.Property<string>("IngredientOptions")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -263,6 +255,31 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.OwnsOne("SmartCafe.Menu.Domain.ValueObjects.ImageAsset", "Image", b1 =>
+                        {
+                            b1.Property<Guid>("MenuItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("BigUrl")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("ImageBigUrl");
+
+                            b1.Property<string>("CroppedUrl")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("ImageCroppedUrl");
+
+                            b1.HasKey("MenuItemId");
+
+                            b1.ToTable("MenuItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MenuItemId");
+                        });
+
+                    b.Navigation("Image");
 
                     b.Navigation("Section");
                 });

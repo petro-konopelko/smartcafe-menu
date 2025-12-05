@@ -9,4 +9,4 @@ public record UpdateMenuRequest(
     Guid MenuId,
     string Name,
     List<SectionDto> Sections
-) : ICommand<Result<UpdateMenuResponse>>;
+) : ICommand<Result>;

@@ -23,7 +23,7 @@ public class ActivateMenuHandler(
 
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != request.CafeId)
+        if (menu is null || menu.CafeId != request.CafeId)
         {
             return Result<ActivateMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
@@ -32,24 +32,24 @@ public class ActivateMenuHandler(
 
         // Deactivate currently active menu via domain
         var currentActiveMenu = await menuRepository.GetActiveMenuAsync(request.CafeId, cancellationToken);
-        if (currentActiveMenu != null)
+        if (currentActiveMenu is not null)
         {
             var deactivation = currentActiveMenu.Deactivate(dateTimeProvider);
             if (deactivation.IsFailure)
-                return Result<ActivateMenuResponse>.Failure(deactivation.Error!);
+                return Result<ActivateMenuResponse>.Failure(deactivation.EnsureError());
             await menuRepository.UpdateAsync(currentActiveMenu, cancellationToken);
         }
 
         // Activate new menu via domain
         var activation = menu.Activate(dateTimeProvider);
         if (activation.IsFailure)
-            return Result<ActivateMenuResponse>.Failure(activation.Error!);
+            return Result<ActivateMenuResponse>.Failure(activation.EnsureError());
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var events = new List<DomainEvent>();
-        if (currentActiveMenu != null)
+        if (currentActiveMenu is not null)
         {
             events.AddRange(currentActiveMenu.DomainEvents);
             currentActiveMenu.ClearDomainEvents();

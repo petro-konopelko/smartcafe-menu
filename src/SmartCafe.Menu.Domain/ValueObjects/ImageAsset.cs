@@ -1,32 +1,15 @@
-using SmartCafe.Menu.Domain.Common;
-
 namespace SmartCafe.Menu.Domain.ValueObjects;
 
 /// <summary>
-/// Represents a pair of image blob names (big + cropped) for a MenuItem.
-/// Responsible for validating extension and consistent naming convention.
+/// Represents a pair of image URLs (big + cropped) for a MenuItem.
 /// </summary>
-public sealed record ImageAsset(string BigName, string CroppedName)
+public sealed record ImageAsset(string BigUrl, string CroppedUrl)
 {
-    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    public static ImageAsset Create(string bigUrl, string croppedUrl)
     {
-        "jpg", "jpeg", "png", "webp"
-    };
+        ArgumentException.ThrowIfNullOrWhiteSpace(bigUrl);
+        ArgumentException.ThrowIfNullOrWhiteSpace(croppedUrl);
 
-    public static Result<ImageAsset> Create(Guid itemId, string extension)
-    {
-        if (string.IsNullOrWhiteSpace(extension))
-            return Result<ImageAsset>.Failure(Error.Validation(new ErrorDetail("Image extension is required", ErrorCodes.ImageInvalidFormat)));
-
-        var ext = extension.Trim().TrimStart('.');
-        if (!AllowedExtensions.Contains(ext))
-            return Result<ImageAsset>.Failure(Error.Validation(new ErrorDetail($"Unsupported image format '{ext}'", ErrorCodes.ImageInvalidFormat)));
-
-        var big = BuildBigName(itemId, ext);
-        var cropped = BuildCroppedName(itemId, ext);
-        return Result<ImageAsset>.Success(new ImageAsset(big, cropped));
+        return new ImageAsset(bigUrl, croppedUrl);
     }
-
-    public static string BuildBigName(Guid itemId, string extension) => $"{itemId}_big.{extension}";
-    public static string BuildCroppedName(Guid itemId, string extension) => $"{itemId}_cropped.{extension}";
 }

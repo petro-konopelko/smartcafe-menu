@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
+namespace SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 
 public record IngredientDto(
     string Name,

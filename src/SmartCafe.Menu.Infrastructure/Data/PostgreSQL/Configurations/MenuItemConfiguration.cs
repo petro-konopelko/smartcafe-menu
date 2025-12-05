@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SmartCafe.Menu.Domain.Entities;
+using SmartCafe.Menu.Domain.ValueObjects;
 
 namespace SmartCafe.Menu.Infrastructure.Data.PostgreSQL.Configurations;
 
@@ -26,18 +27,26 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.Property(e => e.Price)
             .HasPrecision(10, 2);
 
-        builder.Property(e => e.ImageBigUrl)
-            .HasMaxLength(1000);
+        // Map ImageAsset to two separate columns
+        builder.OwnsOne(e => e.Image, image =>
+        {
+            image.Property(i => i.BigUrl)
+                .HasColumnName("ImageBigUrl")
+                .HasMaxLength(1000)
+                .IsRequired(false);
 
-        builder.Property(e => e.ImageCroppedUrl)
-            .HasMaxLength(1000);
+            image.Property(i => i.CroppedUrl)
+                .HasColumnName("ImageCroppedUrl")
+                .HasMaxLength(1000)
+                .IsRequired(false);
+        });
 
         // Store ingredient options as JSONB
         builder.Property(e => e.IngredientOptions)
             .HasColumnType("jsonb")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<List<Domain.ValueObjects.Ingredient>>(v, (JsonSerializerOptions?)null) ?? new List<Domain.ValueObjects.Ingredient>());
+                v => JsonSerializer.Deserialize<List<Ingredient>>(v, (JsonSerializerOptions?)null) ?? new List<Ingredient>());
 
         builder.HasOne(e => e.Section)
             .WithMany(e => e.Items)

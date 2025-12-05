@@ -10,8 +10,7 @@ public class MenuItem
     public required string Name { get; init; }
     public string? Description { get; init; }
     public decimal Price { get; init; }
-    public string? ImageBigUrl { get; set; }
-    public string? ImageCroppedUrl { get; set; }
+    public ImageAsset? Image { get; set; }
     public ICollection<MenuItemCategory> MenuItemCategories { get; init; } = [];
     public List<Ingredient> IngredientOptions { get; init; } = [];
     public bool IsActive { get; set; } = true;

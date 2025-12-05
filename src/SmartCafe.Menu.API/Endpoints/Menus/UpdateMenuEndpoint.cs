@@ -18,12 +18,12 @@ public static class UpdateMenuEndpoint
             CancellationToken ct) =>
         {
             var command = request with { CafeId = cafeId, MenuId = menuId };
-            var result = await mediator.Send<UpdateMenuRequest, Result<UpdateMenuResponse>>(command, ct);
-            return result.ToApiResult();
+            var result = await mediator.Send<UpdateMenuRequest, Result>(command, ct);
+            return result.ToNoContentResult();
         })
         .WithName("UpdateMenu")
         .WithSummary("Update an existing menu with sections and items")
-        .Produces<UpdateMenuResponse>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)
         .ProducesProblem(StatusCodes.Status409Conflict);

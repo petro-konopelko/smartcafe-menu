@@ -23,6 +23,18 @@ public class Result<T>
 
     public static Result<T> Success(T value) => new(value);
     public static Result<T> Failure(Error error) => new(error);
+
+    public T EnsureValue()
+    {
+        return IsFailure || Value is null ? throw new InvalidOperationException("Cannot retrieve the value from a failed result.") : Value;
+    }
+
+    public Error EnsureError()
+    {
+        return IsSuccess || Error is null
+            ? throw new InvalidOperationException("Cannot retrieve the error from a successful result.")
+            : Error;
+    }
 }
 
 /// <summary>

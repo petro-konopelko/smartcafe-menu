@@ -22,7 +22,7 @@ public class DeleteMenuHandler(
 
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != request.CafeId)
+        if (menu is null || menu.CafeId != request.CafeId)
         {
             return Result.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
@@ -31,7 +31,7 @@ public class DeleteMenuHandler(
 
         var deletion = menu.SoftDelete(dateTimeProvider);
         if (deletion.IsFailure)
-            return Result.Failure(deletion.Error!);
+            return Result.Failure(deletion.EnsureError());
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
