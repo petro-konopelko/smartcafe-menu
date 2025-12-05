@@ -1,5 +1,5 @@
-using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
+using SmartCafe.Menu.Application.Features.Menus.Shared.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -7,6 +7,7 @@ using SmartCafe.Menu.Domain;
 using SmartCafe.Menu.Domain.Common;
 using SmartCafe.Menu.Domain.Entities;
 using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Domain.ValueObjects;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 
@@ -35,31 +36,31 @@ public class CreateMenuHandler(
 
         // Validate categories exist
         var categoryValidation = await ValidateCategoriesAsync(request, cancellationToken);
-        if (categoryValidation != null)
+        if (categoryValidation is not null)
         {
             return categoryValidation;
         }
 
-        var menu = Domain.Entities.Menu.CreateDraft(request.CafeId, request.Name, dateTimeProvider);
+        var menuResult = Domain.Entities.Menu.CreateDraft(request.CafeId, request.Name, dateTimeProvider);
 
-        if (menu.IsFailure)
-        {
-            return Result<CreateMenuResponse>.Failure(menu.Error!);
-        }
+        if (menuResult.IsFailure)
+            return Result<CreateMenuResponse>.Failure(menuResult.EnsureError());
+
+        var menu = menuResult.EnsureValue();
 
         // Build sections and items
         var now = dateTimeProvider.UtcNow;
-        BuildMenuStructure(menu.Value!, request.Sections, now);
+        BuildMenuStructure(menu, request.Sections, now);
         // Save to database
-        await menuRepository.CreateAsync(menu.Value!, cancellationToken);
+        await menuRepository.CreateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Dispatch domain events
-        var events = menu.Value!.DomainEvents.ToList();
-        menu.Value!.ClearDomainEvents();
+        var events = menu.DomainEvents.ToList();
+        menu.ClearDomainEvents();
         await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<CreateMenuResponse>.Success(menu.Value!.ToCreateMenuResponse());
+        return Result<CreateMenuResponse>.Success(menu.ToCreateMenuResponse());
     }
 
     private async Task<Result<CreateMenuResponse>?> ValidateCategoriesAsync(CreateMenuRequest request, CancellationToken cancellationToken)
@@ -78,13 +79,10 @@ public class CreateMenuHandler(
         var foundCategories = await categoryRepository.GetByIdsAsync(allCategoryIds, cancellationToken);
         var missingCategoryIds = allCategoryIds.Except(foundCategories.Select(c => c.Id)).ToList();
 
-        if (missingCategoryIds.Count != 0)
-        {
-            return Result<CreateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)));
-        }
-
-        return null;
+        return missingCategoryIds.Count != 0
+            ? Result<CreateMenuResponse>.Failure(Error.Validation(
+                new ErrorDetail($"Categories not found: {string.Join(", ", missingCategoryIds)}", ErrorCodes.CategoriesNotFound)))
+            : null;
     }
 
     private void BuildMenuStructure(Domain.Entities.Menu menu, List<SectionDto> sections, DateTime timestamp)
@@ -113,7 +111,12 @@ public class CreateMenuHandler(
                     Description = itemDto.Description,
                     Price = itemDto.Price,
                     IsActive = true,
-                    IngredientOptions = itemDto.IngredientOptions,
+                    IngredientOptions = itemDto.Ingredients.Select(i => new Ingredient
+                    {
+                        Name = i.Name,
+                        IsExcludable = i.IsExcludable,
+                        IsIncludable = i.IsIncludable
+                    }).ToList(),
                     CreatedAt = timestamp,
                     UpdatedAt = timestamp,
                     MenuItemCategories = []

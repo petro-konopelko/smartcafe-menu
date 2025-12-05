@@ -1,10 +1,10 @@
 using FluentValidation;
 using SmartCafe.Menu.Application.Common.Validators;
-using SmartCafe.Menu.Domain.ValueObjects;
+using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 
 namespace SmartCafe.Menu.Application.Features.Menus.Shared.Validators;
 
-public class IngredientValidator : AbstractValidator<Ingredient>
+public class IngredientValidator : AbstractValidator<IngredientDto>
 {
     public IngredientValidator()
     {

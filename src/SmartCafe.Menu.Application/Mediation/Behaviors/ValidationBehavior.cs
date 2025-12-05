@@ -37,7 +37,7 @@ public sealed class ValidationBehavior<TRequest, T> : IPipelineBehavior<TRequest
 
         var failures = validationResults
             .SelectMany(r => r.Errors)
-            .Where(f => f != null)
+            .Where(f => f is not null)
             .ToList();
 
         if (failures.Count != 0)

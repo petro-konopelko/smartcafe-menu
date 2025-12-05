@@ -22,7 +22,7 @@ public class PublishMenuHandler(
 
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 
-        if (menu == null || menu.CafeId != request.CafeId)
+        if (menu is null || menu.CafeId != request.CafeId)
         {
             return Result<PublishMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
@@ -32,7 +32,7 @@ public class PublishMenuHandler(
         var publish = menu.Publish(dateTimeProvider);
         if (publish.IsFailure)
         {
-            return Result<PublishMenuResponse>.Failure(publish.Error!);
+            return Result<PublishMenuResponse>.Failure(publish.EnsureError());
         }
 
         await menuRepository.UpdateAsync(menu, cancellationToken);

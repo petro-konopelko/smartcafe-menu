@@ -1,7 +1,7 @@
 namespace SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 
 public record SectionDto(
-    Guid? Id,
+    Guid Id,
     string Name,
     int DisplayOrder,
     TimeSpan? AvailableFrom,

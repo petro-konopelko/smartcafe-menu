@@ -1,5 +1,6 @@
 using SmartCafe.Menu.API.Extensions;
 using SmartCafe.Menu.Application.Features.Menus.GetMenu.Models;
+using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Common;
 
@@ -16,12 +17,12 @@ public static class GetMenuEndpoint
             CancellationToken ct) =>
         {
             var query = new GetMenuQuery(cafeId, menuId);
-            var result = await mediator.Send<GetMenuQuery, Result<GetMenuResponse>>(query, ct);
+            var result = await mediator.Send<GetMenuQuery, Result<MenuDto>>(query, ct);
             return result.ToApiResult();
         })
         .WithName("GetMenu")
         .WithSummary("Get a menu with all its sections and items")
-        .Produces<GetMenuResponse>(StatusCodes.Status200OK)
+        .Produces<MenuDto>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound);
 

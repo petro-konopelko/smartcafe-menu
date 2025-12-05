@@ -14,8 +14,8 @@ public class CloneMenuRequestValidator : AbstractValidator<CloneMenuRequest>
         RuleFor(x => x.SourceMenuId)
             .NotEmpty().WithMessage(ValidationMessages.SourceMenuIdRequired);
 
-        RuleFor(x => x.NewMenuName)
-            .NotEmpty().WithMessage(ValidationMessages.NewMenuNameRequired)
+        RuleFor(x => x.NewName)
+            .NotEmpty().WithMessage(ValidationMessages.MenuNameRequired)
             .MaximumLength(200).WithMessage(ValidationMessages.MenuNameMaxLength);
     }
 }

@@ -1,5 +1,6 @@
-using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
+using SmartCafe.Menu.Application.Features.Menus.Shared.Mappers;
+using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain;
@@ -12,9 +13,9 @@ public class CloneMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, Result<CloneMenuResponse>>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, Result<CreateMenuResponse>>
 {
-    public async Task<Result<CloneMenuResponse>> HandleAsync(
+    public async Task<Result<CreateMenuResponse>> HandleAsync(
         CloneMenuRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -22,27 +23,30 @@ public class CloneMenuHandler(
 
         // Load source menu
         var sourceMenu = await menuRepository.GetByIdAsync(request.SourceMenuId, cancellationToken);
-        if (sourceMenu == null || sourceMenu.CafeId != request.CafeId)
+        if (sourceMenu is null || sourceMenu.CafeId != request.CafeId)
         {
-            return Result<CloneMenuResponse>.Failure(Error.NotFound(
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.SourceMenuId} not found",
                 ErrorCodes.MenuNotFound));
         }
 
         // Create cloned menu via domain factory
-        var clonedMenuResult = Domain.Entities.Menu.CloneFrom(sourceMenu, request.NewMenuName, dateTimeProvider);
+        var clonedMenuResult = Domain.Entities.Menu.CloneFrom(sourceMenu, request.NewName, dateTimeProvider);
+
         if (clonedMenuResult.IsFailure)
-            return Result<CloneMenuResponse>.Failure(clonedMenuResult.Error!);
+            return Result<CreateMenuResponse>.Failure(clonedMenuResult.EnsureError());
+
+        var clonedMenu = clonedMenuResult.EnsureValue();
 
         // Save cloned menu
-        await menuRepository.CreateAsync(clonedMenuResult.Value!, cancellationToken);
+        await menuRepository.CreateAsync(clonedMenu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Dispatch domain events directly from cloned menu
-        var events = clonedMenuResult.Value!.DomainEvents.ToList();
-        clonedMenuResult.Value!.ClearDomainEvents();
+        var events = clonedMenu.DomainEvents.ToList();
+        clonedMenu.ClearDomainEvents();
         await eventDispatcher.DispatchAsync(events, cancellationToken);
 
-        return Result<CloneMenuResponse>.Success(clonedMenuResult.Value!.ToCloneMenuResponse());
+        return Result<CreateMenuResponse>.Success(clonedMenu.ToCreateMenuResponse());
     }
 }

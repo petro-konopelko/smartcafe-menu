@@ -23,7 +23,7 @@ public class MenuItemDtoValidator : AbstractValidator<MenuItemDto>
             .Must(categories => categories.Count <= 10)
             .WithMessage(ValidationMessages.ItemMaxCategories);
 
-        RuleForEach(x => x.IngredientOptions)
+        RuleForEach(x => x.Ingredients)
             .SetValidator(new IngredientValidator());
     }
 }
