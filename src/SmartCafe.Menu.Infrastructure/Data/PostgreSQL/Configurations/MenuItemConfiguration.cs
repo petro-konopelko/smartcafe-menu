@@ -24,19 +24,35 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.Property(e => e.Description)
             .HasMaxLength(500);
 
-        builder.Property(e => e.Price)
-            .HasPrecision(10, 2);
+        // Map Price value object to separate columns
+        builder.OwnsOne(e => e.Price, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("PriceAmount")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            price.Property(p => p.Unit)
+                .HasColumnName("PriceUnit")
+                .HasConversion<int>()
+                .IsRequired();
+
+            price.Property(p => p.Discount)
+                .HasColumnName("PriceDiscount")
+                .HasPrecision(3, 2)
+                .IsRequired();
+        });
 
         // Map ImageAsset to two separate columns
         builder.OwnsOne(e => e.Image, image =>
         {
-            image.Property(i => i.BigUrl)
-                .HasColumnName("ImageBigUrl")
+            image.Property(i => i.OriginalPath)
+                .HasColumnName("ImageOriginalPath")
                 .HasMaxLength(1000)
                 .IsRequired(false);
 
-            image.Property(i => i.CroppedUrl)
-                .HasColumnName("ImageCroppedUrl")
+            image.Property(i => i.ThumbnailPath)
+                .HasColumnName("ImageThumbnailPath")
                 .HasMaxLength(1000)
                 .IsRequired(false);
         });
@@ -61,7 +77,11 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.HasIndex(e => e.IngredientOptions)
             .HasMethod("gin");
 
-        // Check constraint for positive price
-        builder.ToTable(t => t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"Price\" > 0"));
+        // Check constraints for price
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
+            t.HasCheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscount\" >= 0 AND \"PriceDiscount\" <= 1");
+        });
     }
 }

@@ -132,6 +132,7 @@ tests/
 - Use descriptive names that reflect business domain
 - Entity IDs are Guid type using `Guid.CreateVersion7()` for time-ordered UUIDs
 - Endpoint files: `{Feature}Endpoint.cs` (e.g., `CreateMenuEndpoint.cs`)
+- **One entity per file**: Each class, record, enum, or interface should have its own file (e.g., `Price.cs` for Price record, `PriceUnit.cs` for PriceUnit enum). This applies to all layers (Domain, Application, Infrastructure).
 
 ### Domain Layer
 - Entities should be rich domain models with behavior

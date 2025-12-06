@@ -151,17 +151,20 @@ dotnet_diagnostic.CA1062.severity = warning
 # CA1860: Prefer comparing 'Count' to 0 rather than calling 'Any()'
 dotnet_diagnostic.CA1860.severity = warning
 
-# IDE0055: White-space formatting
-dotnet_diagnostic.IDE0055.severity = error
+# IDE0001: Simplify name
+dotnet_diagnostic.IDE0001.severity = error
+
+# IDE0002: Name can be simplified
+dotnet_diagnostic.IDE0002.severity = error
 
 # IDE0005: Remove unnecessary usings
 dotnet_diagnostic.IDE0005.severity = error
 
-# IDE0001: Simplify name
-dotnet_diagnostic.IDE0001.severity = error
-
 # IDE0046: 'if' statement can be simplified
-dotnet_diagnostic.IDE0046.severity = error
+dotnet_diagnostic.IDE0046.severity = none
+
+# IDE0055: White-space formatting
+dotnet_diagnostic.IDE0055.severity = error
 
 # IDE0290: Use primary constructor
 csharp_style_prefer_primary_constructors = true:suggestion

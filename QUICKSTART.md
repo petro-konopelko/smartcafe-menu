@@ -105,10 +105,12 @@ VALUES (
 **Response**:
 ```json
 {
-  "fullImageUrl": "https://.../cafeId/menuId/itemId/full.jpg",
-  "croppedImageUrl": "https://.../cafeId/menuId/itemId/cropped.jpg"
+  "originalImageUrl": "https://.../cafeId/menuId/itemId/original.jpg",
+  "thumbnailImageUrl": "https://.../cafeId/menuId/itemId/thumbnail.jpg"
 }
 ```
+
+> **Note**: The API stores relative paths in the database (e.g., `cafeId/menuId/itemId/original.jpg` and `cafeId/menuId/itemId/thumbnail.jpg`) for portability. Full URLs are constructed at runtime and returned in responses.
 
 ### 3. Create Complete Menu (Main Workflow)
 
@@ -133,8 +135,8 @@ VALUES (
           "name": "Avocado Toast",
           "description": "Smashed avocado on sourdough",
           "price": 12.50,
-          "bigImageUrl": "https://.../full.jpg",
-          "croppedImageUrl": "https://.../cropped.jpg",
+          "originalImageUrl": "https://.../original.jpg",
+          "thumbnailImageUrl": "https://.../thumbnail.jpg",
           "isAvailable": true,
           "categoryIds": [
             "01936f99-7ef5-7d14-a482-0a5e379288e6"

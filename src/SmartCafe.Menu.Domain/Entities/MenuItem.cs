@@ -9,7 +9,7 @@ public class MenuItem
     public Section Section { get; init; } = null!;
     public required string Name { get; init; }
     public string? Description { get; init; }
-    public decimal Price { get; init; }
+    public required Price Price { get; init; }
     public ImageAsset? Image { get; set; }
     public ICollection<MenuItemCategory> MenuItemCategories { get; init; } = [];
     public List<Ingredient> IngredientOptions { get; init; } = [];

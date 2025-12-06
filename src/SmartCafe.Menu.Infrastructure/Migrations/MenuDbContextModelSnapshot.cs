@@ -157,10 +157,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
                     b.Property<Guid>("SectionId")
                         .HasColumnType("uuid");
 
@@ -181,7 +177,9 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
 
                     b.ToTable("MenuItems", t =>
                         {
-                            t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"Price\" > 0");
+                            t.HasCheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscount\" >= 0 AND \"PriceDiscount\" <= 1");
+
+                            t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
                         });
                 });
 
@@ -258,15 +256,42 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                             b1.Property<Guid>("MenuItemId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("BigUrl")
+                            b1.Property<string>("OriginalPath")
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("ImageBigUrl");
+                                .HasColumnName("ImageOriginalPath");
 
-                            b1.Property<string>("CroppedUrl")
+                            b1.Property<string>("ThumbnailPath")
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("ImageCroppedUrl");
+                                .HasColumnName("ImageThumbnailPath");
+
+                            b1.HasKey("MenuItemId");
+
+                            b1.ToTable("MenuItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MenuItemId");
+                        });
+
+                    b.OwnsOne("SmartCafe.Menu.Domain.ValueObjects.Price", "Price", b1 =>
+                        {
+                            b1.Property<Guid>("MenuItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(10, 2)
+                                .HasColumnType("numeric(10,2)")
+                                .HasColumnName("PriceAmount");
+
+                            b1.Property<decimal>("Discount")
+                                .HasPrecision(3, 2)
+                                .HasColumnType("numeric(3,2)")
+                                .HasColumnName("PriceDiscount");
+
+                            b1.Property<int>("Unit")
+                                .HasColumnType("integer")
+                                .HasColumnName("PriceUnit");
 
                             b1.HasKey("MenuItemId");
 
@@ -277,6 +302,9 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         });
 
                     b.Navigation("Image");
+
+                    b.Navigation("Price")
+                        .IsRequired();
 
                     b.Navigation("Section");
                 });

@@ -3,11 +3,11 @@ namespace SmartCafe.Menu.Application.Interfaces;
 public interface IImageStorageService
 {
     /// <summary>
-    /// Upload menu item image and generate cropped version.
-    /// Returns URLs for both full and cropped images.
-    /// Path: {cafeId}/{menuId}/{itemId}/full.{ext} and cropped.{ext}
+    /// Upload menu item image and generate thumbnail version.
+    /// Returns relative paths for both original and thumbnail images.
+    /// Path: {cafeId}/{menuId}/{itemId}/original.{ext} and thumbnail.{ext}
     /// </summary>
-    Task<(string FullImageUrl, string CroppedImageUrl)> UploadItemImageAsync(
+    Task<(string OriginalImagePath, string ThumbnailImagePath)> UploadItemImageAsync(
         Guid cafeId,
         Guid menuId,
         Guid itemId,
@@ -30,4 +30,9 @@ public interface IImageStorageService
     Task<string> UploadImageAsync(Stream imageStream, string fileName, CancellationToken cancellationToken = default);
     Task DeleteImageAsync(string blobName, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(string blobName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Construct absolute URL from relative path using current storage configuration.
+    /// </summary>
+    string GetAbsoluteUrl(string relativePath);
 }

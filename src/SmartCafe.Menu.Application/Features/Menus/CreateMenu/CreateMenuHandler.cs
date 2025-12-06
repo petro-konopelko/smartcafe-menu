@@ -109,7 +109,7 @@ public class CreateMenuHandler(
                     SectionId = section.Id,
                     Name = itemDto.Name,
                     Description = itemDto.Description,
-                    Price = itemDto.Price,
+                    Price = Price.Create(itemDto.Price.Amount, itemDto.Price.Unit, itemDto.Price.Discount),
                     IsActive = true,
                     IngredientOptions = itemDto.Ingredients.Select(i => new Ingredient
                     {

@@ -33,6 +33,11 @@ public static class ValidationMessages
     public const string ItemMustHaveCategory = "Item must have at least one category";
     public const string ItemMaxCategories = "Item cannot have more than 10 categories";
 
+    // Price Validation
+    public const string PriceRequired = "Price is required";
+    public const string PriceUnitInvalid = "Price unit must be a valid value";
+    public const string DiscountInvalid = "Discount must be between 0 and 1";
+
     // Ingredient Validation
     public const string IngredientNameRequired = "Ingredient name is required";
     public const string IngredientNameMaxLength = "Ingredient name must not exceed 100 characters";

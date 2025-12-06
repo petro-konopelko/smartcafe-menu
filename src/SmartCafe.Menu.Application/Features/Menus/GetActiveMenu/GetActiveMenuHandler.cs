@@ -8,7 +8,7 @@ using SmartCafe.Menu.Domain.Common;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
 
-public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandler<GetActiveMenuQuery, Result<MenuDto>>
+public class GetActiveMenuHandler(IMenuRepository menuRepository, IImageStorageService imageStorageService) : IQueryHandler<GetActiveMenuQuery, Result<MenuDto>>
 {
     public async Task<Result<MenuDto>> HandleAsync(
         GetActiveMenuQuery request,
@@ -22,6 +22,6 @@ public class GetActiveMenuHandler(IMenuRepository menuRepository) : IQueryHandle
             ? Result<MenuDto>.Failure(Error.NotFound(
                 $"No active menu found for cafe {request.CafeId}",
                 ErrorCodes.MenuNotFound))
-            : Result<MenuDto>.Success(menu.ToMenuDto());
+            : Result<MenuDto>.Success(menu.ToMenuDto(imageStorageService));
     }
 }

@@ -19,7 +19,7 @@ public class UploadImageHandler(IImageStorageService imageStorageService) : ICom
             fileExtension = command.ContentType.Split('/').Last();
         }
 
-        var (fullImageUrl, croppedImageUrl) = await imageStorageService.UploadItemImageAsync(
+        var (originalImagePath, thumbnailImagePath) = await imageStorageService.UploadItemImageAsync(
             command.CafeId,
             command.MenuId,
             command.ItemId,
@@ -27,6 +27,10 @@ public class UploadImageHandler(IImageStorageService imageStorageService) : ICom
             fileExtension,
             cancellationToken);
 
-        return new UploadImageResponse(fullImageUrl, croppedImageUrl);
+        // Construct absolute URLs from paths
+        var originalImageUrl = imageStorageService.GetAbsoluteUrl(originalImagePath);
+        var thumbnailImageUrl = imageStorageService.GetAbsoluteUrl(thumbnailImagePath);
+
+        return new UploadImageResponse(OriginalImageUrl: originalImageUrl, ThumbnailImageUrl: thumbnailImageUrl);
     }
 }
