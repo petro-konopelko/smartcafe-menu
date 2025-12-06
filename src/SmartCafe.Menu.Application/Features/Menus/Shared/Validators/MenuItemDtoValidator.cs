@@ -16,7 +16,8 @@ public class MenuItemDtoValidator : AbstractValidator<MenuItemDto>
             .MaximumLength(500).WithMessage(ValidationMessages.ItemDescriptionMaxLength);
 
         RuleFor(x => x.Price)
-            .GreaterThan(0).WithMessage(ValidationMessages.ItemPriceGreaterThanZero);
+            .NotNull().WithMessage(ValidationMessages.PriceRequired)
+            .SetValidator(new PriceDtoValidator());
 
         RuleFor(x => x.CategoryIds)
             .NotEmpty().WithMessage(ValidationMessages.ItemMustHaveCategory)

@@ -1,15 +1,17 @@
 namespace SmartCafe.Menu.Domain.ValueObjects;
 
 /// <summary>
-/// Represents a pair of image URLs (big + cropped) for a MenuItem.
+/// Represents relative paths for image storage (original + thumbnail) for a MenuItem.
+/// Relative paths allow storage account and container changes without database updates.
+/// Example: "cafeId/menuId/itemId/original.jpg"
 /// </summary>
-public sealed record ImageAsset(string BigUrl, string CroppedUrl)
+public sealed record ImageAsset(string OriginalPath, string ThumbnailPath)
 {
-    public static ImageAsset Create(string bigUrl, string croppedUrl)
+    public static ImageAsset Create(string originalPath, string thumbnailPath)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(bigUrl);
-        ArgumentException.ThrowIfNullOrWhiteSpace(croppedUrl);
+        ArgumentException.ThrowIfNullOrWhiteSpace(originalPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(thumbnailPath);
 
-        return new ImageAsset(bigUrl, croppedUrl);
+        return new ImageAsset(originalPath, thumbnailPath);
     }
 }

@@ -97,9 +97,11 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     SectionId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Price = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    ImageBigUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    ImageCroppedUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    PriceAmount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
+                    PriceUnit = table.Column<int>(type: "integer", nullable: false),
+                    PriceDiscount = table.Column<decimal>(type: "numeric(3,2)", precision: 3, scale: 2, nullable: false),
+                    ImageOriginalPath = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    ImageThumbnailPath = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     IngredientOptions = table.Column<string>(type: "jsonb", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -108,7 +110,8 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MenuItems", x => x.Id);
-                    table.CheckConstraint("CK_MenuItems_Price_Positive", "\"Price\" > 0");
+                    table.CheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscount\" >= 0 AND \"PriceDiscount\" <= 1");
+                    table.CheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
                     table.ForeignKey(
                         name: "FK_MenuItems_Sections_SectionId",
                         column: x => x.SectionId,

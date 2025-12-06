@@ -7,8 +7,10 @@ namespace SmartCafe.Menu.Infrastructure.BlobStorage;
 public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string containerName, IImageProcessor imageProcessor) : IImageStorageService
 {
     private readonly BlobContainerClient _containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+    private readonly string _accountName = blobServiceClient.AccountName;
+    private readonly string _containerName = containerName;
 
-    public async Task<(string FullImageUrl, string CroppedImageUrl)> UploadItemImageAsync(
+    public async Task<(string OriginalImagePath, string ThumbnailImagePath)> UploadItemImageAsync(
         Guid cafeId,
         Guid menuId,
         Guid itemId,
@@ -26,27 +28,27 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
 
         // Create folder path: cafeId/menuId/itemId/
         var folderPath = $"{cafeId}/{menuId}/{itemId}";
-        var fullImageName = $"{folderPath}/full{ext}";
-        var croppedImageName = $"{folderPath}/cropped{ext}";
+        var originalImageName = $"{folderPath}/original{ext}";
+        var thumbnailImageName = $"{folderPath}/thumbnail{ext}";
 
-        // Upload full image
-        var fullBlobClient = _containerClient.GetBlobClient(fullImageName);
+        // Upload original image
+        var originalBlobClient = _containerClient.GetBlobClient(originalImageName);
         imageStream.Position = 0;
-        await fullBlobClient.UploadAsync(
+        await originalBlobClient.UploadAsync(
             imageStream,
             new BlobHttpHeaders { ContentType = GetContentType(ext) },
             cancellationToken: cancellationToken);
 
-        // Generate and upload cropped image
+        // Generate and upload thumbnail image
         imageStream.Position = 0;
-        using var croppedStream = await imageProcessor.CreateCroppedImageAsync(imageStream, 300, 300, cancellationToken);
-        var croppedBlobClient = _containerClient.GetBlobClient(croppedImageName);
-        await croppedBlobClient.UploadAsync(
-            croppedStream,
+        using var thumbnailStream = await imageProcessor.CreateCroppedImageAsync(imageStream, 300, 300, cancellationToken);
+        var thumbnailBlobClient = _containerClient.GetBlobClient(thumbnailImageName);
+        await thumbnailBlobClient.UploadAsync(
+            thumbnailStream,
             new BlobHttpHeaders { ContentType = GetContentType(ext) },
             cancellationToken: cancellationToken);
 
-        return (fullBlobClient.Uri.ToString(), croppedBlobClient.Uri.ToString());
+        return (originalImageName, thumbnailImageName);
     }
 
     public async Task DeleteMenuImagesAsync(Guid cafeId, Guid menuId, CancellationToken cancellationToken = default)
@@ -91,6 +93,12 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
     {
         var blobClient = _containerClient.GetBlobClient(blobName);
         return await blobClient.ExistsAsync(cancellationToken);
+    }
+
+    public string GetAbsoluteUrl(string relativePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
+        return $"https://{_accountName}.blob.core.windows.net/{_containerName}/{relativePath}";
     }
 
     private static string GetContentType(string fileName)

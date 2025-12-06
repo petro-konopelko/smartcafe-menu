@@ -131,7 +131,7 @@ public class UpdateMenuHandler(
                     SectionId = section.Id,
                     Name = itemDto.Name,
                     Description = itemDto.Description,
-                    Price = itemDto.Price,
+                    Price = Price.Create(itemDto.Price.Amount, itemDto.Price.Unit, itemDto.Price.Discount),
                     Image = existingItem?.Image, // Preserve existing image
                     IsActive = itemDto.IsActive,
                     IngredientOptions = itemDto.Ingredients.Select(i => new Ingredient
