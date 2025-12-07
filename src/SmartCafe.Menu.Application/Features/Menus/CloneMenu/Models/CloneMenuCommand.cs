@@ -4,7 +4,7 @@ using SmartCafe.Menu.Domain.Common;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
 
-public record CloneMenuRequest(
+public record CloneMenuCommand(
     Guid CafeId,
     Guid SourceMenuId,
     string NewName

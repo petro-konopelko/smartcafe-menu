@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.API.Models.Requests;
 using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -18,8 +19,8 @@ public static class CloneMenuEndpoint
             IMediator mediator,
             CancellationToken ct) =>
         {
-            var command = request with { CafeId = cafeId, SourceMenuId = menuId };
-            var result = await mediator.Send<CloneMenuRequest, Result<CreateMenuResponse>>(command, ct);
+            var command = new CloneMenuCommand(cafeId, menuId, request.NewName);
+            var result = await mediator.Send<CloneMenuCommand, Result<CreateMenuResponse>>(command, ct);
             return result.ToCreatedResult(response => MenuRoutes.GetMenuLocation(cafeId, response.MenuId));
         })
         .WithName("CloneMenu")

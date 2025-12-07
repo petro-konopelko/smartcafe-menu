@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.API.Models.Requests;
 using SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Common;
@@ -17,8 +18,8 @@ public static class UpdateMenuEndpoint
             IMediator mediator,
             CancellationToken ct) =>
         {
-            var command = request with { CafeId = cafeId, MenuId = menuId };
-            var result = await mediator.Send<UpdateMenuRequest, Result>(command, ct);
+            var command = new UpdateMenuCommand(cafeId, menuId, request.Name, request.Sections);
+            var result = await mediator.Send<UpdateMenuCommand, Result>(command, ct);
             return result.ToNoContentResult();
         })
         .WithName("UpdateMenu")

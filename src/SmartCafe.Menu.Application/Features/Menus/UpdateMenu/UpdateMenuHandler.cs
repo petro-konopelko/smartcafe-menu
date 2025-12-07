@@ -14,11 +14,11 @@ public class UpdateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuRequest, Result>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateMenuCommand, Result>
 {
 
     public async Task<Result> HandleAsync(
-        UpdateMenuRequest request,
+        UpdateMenuCommand request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -90,7 +90,7 @@ public class UpdateMenuHandler(
 
     private void BuildMenuStructureInPlace(
         Domain.Entities.Menu menu,
-        UpdateMenuRequest request,
+        UpdateMenuCommand request,
         DateTime timestamp)
     {
         // Create lookup maps for existing sections and items to preserve their data

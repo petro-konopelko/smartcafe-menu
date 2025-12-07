@@ -17,10 +17,10 @@ public class CreateMenuHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuRequest, Result<CreateMenuResponse>>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateMenuCommand, Result<CreateMenuResponse>>
 {
     public async Task<Result<CreateMenuResponse>> HandleAsync(
-        CreateMenuRequest request,
+        CreateMenuCommand request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -63,7 +63,7 @@ public class CreateMenuHandler(
         return Result<CreateMenuResponse>.Success(menu.ToCreateMenuResponse());
     }
 
-    private async Task<Result<CreateMenuResponse>?> ValidateCategoriesAsync(CreateMenuRequest request, CancellationToken cancellationToken)
+    private async Task<Result<CreateMenuResponse>?> ValidateCategoriesAsync(CreateMenuCommand request, CancellationToken cancellationToken)
     {
         var allCategoryIds = request.Sections
             .SelectMany(s => s.Items)

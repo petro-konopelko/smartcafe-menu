@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartCafe.Menu.API.Extensions;
+using SmartCafe.Menu.API.Models.Requests;
 using SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
@@ -17,8 +18,8 @@ public static class CreateMenuEndpoint
             IMediator mediator,
             CancellationToken ct) =>
         {
-            var command = request with { CafeId = cafeId };
-            var result = await mediator.Send<CreateMenuRequest, Result<CreateMenuResponse>>(command, ct);
+            var command = new CreateMenuCommand(cafeId, request.Name, request.Sections);
+            var result = await mediator.Send<CreateMenuCommand, Result<CreateMenuResponse>>(command, ct);
             return result.ToCreatedResult(response => MenuRoutes.GetMenuLocation(cafeId, response.MenuId));
         })
         .WithName("CreateMenu")

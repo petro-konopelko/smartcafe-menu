@@ -2,10 +2,11 @@ using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
 using SmartCafe.Menu.Domain.Common;
 
-namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu.Models;
+namespace SmartCafe.Menu.Application.Features.Menus.UpdateMenu.Models;
 
-public record CreateMenuRequest(
+public record UpdateMenuCommand(
     Guid CafeId,
+    Guid MenuId,
     string Name,
     List<SectionDto> Sections
-) : ICommand<Result<CreateMenuResponse>>;
+) : ICommand<Result>;
