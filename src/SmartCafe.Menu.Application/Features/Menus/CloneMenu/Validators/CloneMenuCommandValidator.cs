@@ -4,9 +4,9 @@ using SmartCafe.Menu.Application.Features.Menus.CloneMenu.Models;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CloneMenu.Validators;
 
-public class CloneMenuRequestValidator : AbstractValidator<CloneMenuRequest>
+public class CloneMenuCommandValidator : AbstractValidator<CloneMenuCommand>
 {
-    public CloneMenuRequestValidator()
+    public CloneMenuCommandValidator()
     {
         RuleFor(x => x.CafeId)
             .NotEmpty().WithMessage(ValidationMessages.CafeIdRequired);

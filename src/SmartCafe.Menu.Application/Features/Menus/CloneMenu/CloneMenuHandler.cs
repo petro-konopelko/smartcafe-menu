@@ -13,10 +13,10 @@ public class CloneMenuHandler(
     IMenuRepository menuRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuRequest, Result<CreateMenuResponse>>
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CloneMenuCommand, Result<CreateMenuResponse>>
 {
     public async Task<Result<CreateMenuResponse>> HandleAsync(
-        CloneMenuRequest request,
+        CloneMenuCommand request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);

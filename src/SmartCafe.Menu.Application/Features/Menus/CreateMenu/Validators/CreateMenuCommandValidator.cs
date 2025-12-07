@@ -5,9 +5,9 @@ using SmartCafe.Menu.Application.Features.Menus.Shared.Validators;
 
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu.Validators;
 
-public class CreateMenuRequestValidator : AbstractValidator<CreateMenuRequest>
+public class CreateMenuCommandValidator : AbstractValidator<CreateMenuCommand>
 {
-    public CreateMenuRequestValidator()
+    public CreateMenuCommandValidator()
     {
         RuleFor(x => x.CafeId)
             .NotEmpty().WithMessage(ValidationMessages.CafeIdRequired);
