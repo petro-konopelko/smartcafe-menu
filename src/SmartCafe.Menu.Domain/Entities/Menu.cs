@@ -1,41 +1,122 @@
 using SmartCafe.Menu.Domain.Common;
 using SmartCafe.Menu.Domain.Enums;
+using SmartCafe.Menu.Domain.Errors;
 using SmartCafe.Menu.Domain.Events;
-using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Domain.Extensions;
+using SmartCafe.Menu.Domain.Models;
+using SmartCafe.Menu.Shared.Models;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.Domain.Entities;
 
 public class Menu : Entity
 {
-    public Guid Id { get; init; } = Guid.CreateVersion7();
+    private readonly List<Section> _sections = [];
+
     public Guid CafeId { get; init; }
     public Cafe Cafe { get; init; } = null!;
     public string Name { get; private set; } = string.Empty;
     public MenuState State { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public DateTime? ActivatedAt { get; private set; }
-    public List<Section> Sections { get; init; } = [];
-    public DateTime CreatedAt { get; init; }
+    public IReadOnlyCollection<Section> Sections => _sections.AsReadOnly();
+    public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    // Is required for EF Core
+    private Menu() { }
+
+    private Menu(Guid menuId, Guid cafeId)
+    {
+        if (menuId.Equals(Guid.Empty))
+        {
+            throw new ArgumentException("ID cannot be empty", nameof(menuId));
+        }
+
+        if (cafeId.Equals(Guid.Empty))
+        {
+            throw new ArgumentException("Cafe ID cannot be empty", nameof(cafeId));
+        }
+
+        Id = menuId;
+        CafeId = cafeId;
+    }
+
+    public static Result<Menu> Create(
+        Guid cafeId,
+        string name,
+        IGuidIdProvider idProvider,
+        IDateTimeProvider clock,
+        IReadOnlyCollection<SectionUpdateInfo> sections)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(idProvider);
+
+        var menu = new Menu(idProvider.NewId(), cafeId);
+
+        var utcNow = clock.UtcNow;
+
+        menu.State = MenuState.New;
+        menu.CreatedAt = utcNow;
+
+        var result = menu.SyncMenu(name, sections, idProvider, utcNow);
+
+        if (result.IsFailure)
+        {
+            return Result<Menu>.Failure(result.EnsureError());
+        }
+
+        menu.AddDomainEvent(new MenuCreatedEvent(
+            clock.UtcNow,
+            menu.Id,
+            cafeId,
+            menu.Name));
+
+        return Result<Menu>.Success(menu);
+    }
+
+    public Result SyncMenu(
+        string name,
+        IReadOnlyCollection<SectionUpdateInfo> sections,
+        IDateTimeProvider clock,
+        IGuidIdProvider idProvider)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+
+        var utcNow = clock.UtcNow;
+
+        return SyncMenu(name, sections, idProvider, utcNow);
+    }
 
     public Result Activate(IDateTimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(clock);
 
         if (State == MenuState.Deleted)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", ErrorCodes.MenuNotFound)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
+        }
+
         if (State != MenuState.Published)
-            return Result.Failure(Error.Conflict("Menu is not published", ErrorCodes.MenuNotPublished));
+        {
+            return Result.Failure(Error.Conflict("Menu is not published", MenuErrorCodes.MenuNotPublished));
+        }
+
         if (State == MenuState.Active)
-            return Result.Failure(Error.Conflict("Menu is already active", ErrorCodes.MenuAlreadyActive));
+        {
+            return Result.Failure(Error.Conflict("Menu is already active", MenuErrorCodes.MenuAlreadyActive));
+        }
 
         if (Sections.Count == 0)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", ErrorCodes.MenuHasNoSections)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", MenuErrorCodes.MenuHasNoSections)));
+        }
 
         var hasItems = Sections.Any(s => s.Items.Count > 0);
         if (!hasItems)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", ErrorCodes.MenuHasNoItems)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", MenuErrorCodes.MenuHasNoItems)));
+        }
 
         State = MenuState.Active;
         ActivatedAt = clock.UtcNow;
@@ -55,16 +136,25 @@ public class Menu : Entity
         ArgumentNullException.ThrowIfNull(clock);
 
         if (State == MenuState.Deleted)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", ErrorCodes.MenuNotFound)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
+        }
+
         if (State == MenuState.Published)
-            return Result.Failure(Error.Conflict("Menu is already published", ErrorCodes.MenuAlreadyPublished));
+        {
+            return Result.Failure(Error.Conflict("Menu is already published", MenuErrorCodes.MenuAlreadyPublished));
+        }
 
         if (Sections.Count == 0)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", ErrorCodes.MenuHasNoSections)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", MenuErrorCodes.MenuHasNoSections)));
+        }
 
         var hasItems = Sections.Any(s => s.Items.Count > 0);
         if (!hasItems)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", ErrorCodes.MenuHasNoItems)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", MenuErrorCodes.MenuHasNoItems)));
+        }
 
         State = MenuState.Published;
         PublishedAt = clock.UtcNow;
@@ -84,9 +174,14 @@ public class Menu : Entity
         ArgumentNullException.ThrowIfNull(clock);
 
         if (State == MenuState.Deleted)
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", ErrorCodes.MenuNotFound)));
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
+        }
+
         if (State != MenuState.Active)
-            return Result.Failure(Error.Conflict("Menu is not active", ErrorCodes.MenuNotActive));
+        {
+            return Result.Failure(Error.Conflict("Menu is not active", MenuErrorCodes.MenuNotActive));
+        }
 
         State = MenuState.Published;
         UpdatedAt = clock.UtcNow;
@@ -104,10 +199,14 @@ public class Menu : Entity
         ArgumentNullException.ThrowIfNull(clock);
 
         if (State == MenuState.Active)
-            return Result.Failure(Error.Conflict("Cannot delete an active menu", ErrorCodes.CannotDeleteActiveMenu));
+        {
+            return Result.Failure(Error.Conflict("Cannot delete an active menu", MenuErrorCodes.CannotDeleteActiveMenu));
+        }
 
         if (State == MenuState.Deleted)
+        {
             return Result.Success();
+        }
 
         State = MenuState.Deleted;
         UpdatedAt = clock.UtcNow;
@@ -120,129 +219,62 @@ public class Menu : Entity
         return Result.Success();
     }
 
-    public Result UpdateName(string name, IDateTimeProvider clock)
+    private Result<string> ValidateName(string name)
     {
-        ArgumentNullException.ThrowIfNull(clock);
-
         if (string.IsNullOrWhiteSpace(name))
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu name is required", ErrorCodes.MenuNameRequired)));
-
-        Name = name.Trim();
-        UpdatedAt = clock.UtcNow;
-        return Result.Success();
-    }
-
-    public Result MarkUpdated(IDateTimeProvider clock)
-    {
-        ArgumentNullException.ThrowIfNull(clock);
-
-        UpdatedAt = clock.UtcNow;
-        AddDomainEvent(new MenuUpdatedEvent(
-            clock.UtcNow,
-            Id,
-            CafeId,
-            Name));
-        return Result.Success();
-    }
-
-    public static Result<Menu> CreateDraft(Guid cafeId, string name, IDateTimeProvider clock)
-    {
-        ArgumentNullException.ThrowIfNull(clock);
-
-        if (string.IsNullOrWhiteSpace(name))
-            return Result<Menu>.Failure(Error.Validation(new ErrorDetail("Menu name is required", ErrorCodes.MenuNameRequired)));
-
-        var menu = new Menu
         {
-            Id = Guid.CreateVersion7(),
-            CafeId = cafeId,
-            CreatedAt = clock.UtcNow,
-        };
-        menu.Name = name.Trim();
-        menu.State = MenuState.Draft;
-        menu.UpdatedAt = menu.CreatedAt;
-
-        menu.AddDomainEvent(new MenuCreatedEvent(
-            clock.UtcNow,
-            menu.Id,
-            cafeId,
-            menu.Name));
-
-        return Result<Menu>.Success(menu);
-    }
-
-    public static Result<Menu> CloneFrom(Menu source, string newName, IDateTimeProvider clock)
-    {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(clock);
-
-        if (string.IsNullOrWhiteSpace(newName))
-            return Result<Menu>.Failure(Error.Validation(new ErrorDetail("Menu name is required", ErrorCodes.MenuNameRequired)));
-
-        var cloned = new Menu
-        {
-            Id = Guid.CreateVersion7(),
-            CafeId = source.CafeId,
-            CreatedAt = clock.UtcNow,
-        };
-        cloned.Name = newName.Trim();
-        cloned.State = MenuState.Draft;
-        cloned.UpdatedAt = cloned.CreatedAt;
-
-        // Clone sections and items
-        foreach (var sourceSection in source.Sections)
-        {
-            var clonedSection = new Section
-            {
-                Id = Guid.CreateVersion7(),
-                MenuId = cloned.Id,
-                Name = sourceSection.Name,
-                DisplayOrder = sourceSection.DisplayOrder,
-                AvailableFrom = sourceSection.AvailableFrom,
-                AvailableTo = sourceSection.AvailableTo,
-                CreatedAt = cloned.CreatedAt,
-                Items = []
-            };
-
-            foreach (var sourceItem in sourceSection.Items)
-            {
-                var clonedItem = new MenuItem
-                {
-                    Id = Guid.CreateVersion7(),
-                    SectionId = clonedSection.Id,
-                    Name = sourceItem.Name,
-                    Description = sourceItem.Description,
-                    Price = sourceItem.Price,
-                    Image = sourceItem.Image,
-                    IsActive = sourceItem.IsActive,
-                    IngredientOptions = sourceItem.IngredientOptions.ToList(),
-                    CreatedAt = cloned.CreatedAt,
-                    UpdatedAt = cloned.UpdatedAt,
-                    MenuItemCategories = []
-                };
-
-                foreach (var sourceCategory in sourceItem.MenuItemCategories)
-                {
-                    clonedItem.MenuItemCategories.Add(new MenuItemCategory
-                    {
-                        MenuItemId = clonedItem.Id,
-                        CategoryId = sourceCategory.CategoryId
-                    });
-                }
-
-                clonedSection.Items.Add(clonedItem);
-            }
-
-            cloned.Sections.Add(clonedSection);
+            return Result<string>.Failure(Error.Validation(new ErrorDetail("Menu name is required", MenuErrorCodes.MenuNameRequired)));
         }
 
-        cloned.AddDomainEvent(new MenuClonedEvent(
-            clock.UtcNow,
-            source.Id,
-            cloned.Id,
-            source.CafeId,
-            cloned.Name));
-
-        return Result<Menu>.Success(cloned);
+        return Result<string>.Success(name.Trim());
     }
+
+    private Result SyncMenu(
+        string name,
+        IReadOnlyCollection<SectionUpdateInfo> sections,
+        IGuidIdProvider idProvider,
+        DateTime utcNow)
+    {
+        var nameResult = ValidateName(name);
+
+        if (nameResult.IsFailure)
+        {
+            return nameResult;
+        }
+
+        var syncSectionsResult = SyncSections(sections, idProvider, utcNow);
+
+        if (syncSectionsResult.IsFailure)
+        {
+            return syncSectionsResult;
+        }
+
+        UpdatedAt = utcNow;
+        Name = nameResult.EnsureValue();
+
+        return Result.Success();
+    }
+
+    private Result SyncSections(IReadOnlyCollection<SectionUpdateInfo> sections, IGuidIdProvider idProvider, DateTime utcNow)
+    {
+        if (sections.HasDuplicateByKey(s => s.Id, s => s.HasValue))
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Section IDs must be unique", SectionErrorCodes.DuplicateSectionId)));
+        }
+
+        if (sections.HasDuplicateByKey(s => s.Name?.Trim().ToLowerInvariant(), name => !string.IsNullOrWhiteSpace(name)))
+        {
+            return Result.Failure(Error.Validation(new ErrorDetail("Section names must be unique", SectionErrorCodes.SectionNameNotUnique)));
+        }
+
+        return _sections.SyncCollection(
+              sections,
+              sectionId => new ErrorDetail($"Section with ID {sectionId} not found", SectionErrorCodes.SectionNotFound),
+              () => Section.Create(idProvider.NewId(), Id, utcNow),
+              (section, sectionInfo, position) => section.UpdateDetails(sectionInfo.Name, position, sectionInfo.AvailableFrom, sectionInfo.AvailableTo, utcNow),
+              (section, sectionInfo) => section.SyncItems(idProvider, sectionInfo.Items, utcNow));
+    }
+
+
 }
+

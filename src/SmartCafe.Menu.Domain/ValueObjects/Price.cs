@@ -1,3 +1,7 @@
+using SmartCafe.Menu.Domain.Enums;
+using SmartCafe.Menu.Domain.Errors;
+using SmartCafe.Menu.Shared.Models;
+
 namespace SmartCafe.Menu.Domain.ValueObjects;
 
 /// <summary>
@@ -21,14 +25,22 @@ public sealed record Price
         Discount = discount;
     }
 
-    public static Price Create(decimal amount, PriceUnit unit, decimal discount = 0)
+    public static Result<Price> Create(decimal amount, PriceUnit unit, decimal discount)
     {
+        List<ErrorDetail> errors = [];
+
         if (amount <= 0)
-            throw new ArgumentException("Price amount must be greater than zero", nameof(amount));
+        {
+            errors.Add(new ErrorDetail("Price amount must be greater than zero", ItemErrorCodes.PriceInvalid));
+        }
 
-        if (discount < 0 || discount > 1)
-            throw new ArgumentException("Discount must be between 0 and 1", nameof(discount));
+        if (discount < 0 || discount >= 1)
+        {
+            errors.Add(new ErrorDetail("Discount must be between 0 and 1", ItemErrorCodes.PriceDiscountInvalid));
+        }
 
-        return new Price(amount, unit, discount);
+        return errors.Count > 0
+            ? Result<Price>.Failure(Error.Validation(errors))
+            : Result<Price>.Success(new Price(amount, unit, discount));
     }
 }

@@ -2,9 +2,9 @@ using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.PublishMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain;
-using SmartCafe.Menu.Domain.Common;
-using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Domain.Errors;
+using SmartCafe.Menu.Shared.Models;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.Application.Features.Menus.PublishMenu;
 
@@ -26,7 +26,7 @@ public class PublishMenuHandler(
         {
             return Result<PublishMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                ErrorCodes.MenuNotFound));
+                MenuErrorCodes.MenuNotFound));
         }
 
         var publish = menu.Publish(dateTimeProvider);

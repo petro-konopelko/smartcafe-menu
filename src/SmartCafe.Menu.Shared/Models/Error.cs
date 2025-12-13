@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Domain.Common;
+namespace SmartCafe.Menu.Shared.Models;
 
 public sealed class Error
 {
@@ -15,17 +15,22 @@ public sealed class Error
         new(type, details);
 
     public static Error Create(ErrorType type, IEnumerable<ErrorDetail> details) =>
-        new(type, details.ToList());
+        new(type, [.. details]);
 
     public static Error NotFound(string message, string? code = null) =>
-        new(ErrorType.NotFound, new[] { new ErrorDetail(message, code) });
+        new(ErrorType.NotFound, [new ErrorDetail(message, code)]);
 
     public static Error Validation(params ErrorDetail[] details) =>
         new(ErrorType.Validation, details);
 
     public static Error Validation(IEnumerable<ErrorDetail> details) =>
-        new(ErrorType.Validation, details.ToList());
+        new(ErrorType.Validation, [.. details]);
 
     public static Error Conflict(string message, string? code = null) =>
-        new(ErrorType.Conflict, new[] { new ErrorDetail(message, code) });
+        new(ErrorType.Conflict, [new ErrorDetail(message, code)]);
+
+    internal static Error Validation(string v, object invalidSectionName)
+    {
+        throw new NotImplementedException();
+    }
 }

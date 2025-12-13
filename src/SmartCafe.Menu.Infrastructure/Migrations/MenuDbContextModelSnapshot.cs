@@ -46,51 +46,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.ToTable("Cafes");
                 });
 
-            modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Category", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("IconUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsDefault");
-
-                    b.HasIndex("Name");
-
-                    b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("550e8400-e29b-41d4-a716-446655440001"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDefault = true,
-                            Name = "Vegetarian"
-                        },
-                        new
-                        {
-                            Id = new Guid("550e8400-e29b-41d4-a716-446655440002"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsDefault = true,
-                            Name = "Spicy"
-                        });
-                });
-
             modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Menu", b =>
                 {
                     b.Property<Guid>("Id")
@@ -149,13 +104,13 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SectionId")
                         .HasColumnType("uuid");
@@ -171,9 +126,9 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("IngredientOptions"), "gin");
 
-                    b.HasIndex("IsActive");
-
                     b.HasIndex("SectionId");
+
+                    b.HasIndex("SectionId", "Position");
 
                     b.ToTable("MenuItems", t =>
                         {
@@ -181,21 +136,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
                         });
-                });
-
-            modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.MenuItemCategory", b =>
-                {
-                    b.Property<Guid>("MenuItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("MenuItemId", "CategoryId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("MenuItemCategories");
                 });
 
             modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Section", b =>
@@ -212,9 +152,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
-
                     b.Property<Guid>("MenuId")
                         .HasColumnType("uuid");
 
@@ -223,11 +160,17 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MenuId");
 
-                    b.HasIndex("MenuId", "DisplayOrder");
+                    b.HasIndex("MenuId", "Position");
 
                     b.ToTable("Sections");
                 });
@@ -309,25 +252,6 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.Navigation("Section");
                 });
 
-            modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.MenuItemCategory", b =>
-                {
-                    b.HasOne("SmartCafe.Menu.Domain.Entities.Category", "Category")
-                        .WithMany("MenuItemCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SmartCafe.Menu.Domain.Entities.MenuItem", "MenuItem")
-                        .WithMany("MenuItemCategories")
-                        .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("MenuItem");
-                });
-
             modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Section", b =>
                 {
                     b.HasOne("SmartCafe.Menu.Domain.Entities.Menu", "Menu")
@@ -339,19 +263,9 @@ namespace SmartCafe.Menu.Infrastructure.Migrations
                     b.Navigation("Menu");
                 });
 
-            modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Category", b =>
-                {
-                    b.Navigation("MenuItemCategories");
-                });
-
             modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Menu", b =>
                 {
                     b.Navigation("Sections");
-                });
-
-            modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.MenuItem", b =>
-                {
-                    b.Navigation("MenuItemCategories");
                 });
 
             modelBuilder.Entity("SmartCafe.Menu.Domain.Entities.Section", b =>

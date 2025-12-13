@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Domain.ValueObjects;
+namespace SmartCafe.Menu.Domain.Enums;
 
 /// <summary>
 /// Represents the unit for pricing a menu item.

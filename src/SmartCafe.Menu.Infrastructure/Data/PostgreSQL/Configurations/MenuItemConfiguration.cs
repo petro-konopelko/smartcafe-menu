@@ -71,7 +71,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
 
         builder.HasIndex(e => e.SectionId);
         builder.HasIndex(e => e.CreatedAt);
-        builder.HasIndex(e => e.IsActive);
+        builder.HasIndex(e => new { e.SectionId, e.Position });
 
         // JSONB index for ingredient queries
         builder.HasIndex(e => e.IngredientOptions)
@@ -83,5 +83,8 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
             t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
             t.HasCheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscount\" >= 0 AND \"PriceDiscount\" <= 1");
         });
+
+        // Ignore domain events collection (not persisted)
+        builder.Ignore(e => e.DomainEvents);
     }
 }

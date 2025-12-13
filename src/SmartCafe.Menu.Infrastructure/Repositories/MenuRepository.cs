@@ -12,8 +12,6 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         return await context.Menus
             .Include(m => m.Sections)
                 .ThenInclude(s => s.Items)
-                    .ThenInclude(i => i.MenuItemCategories)
-                        .ThenInclude(mic => mic.Category)
             .FirstOrDefaultAsync(m => m.Id == menuId, cancellationToken);
     }
 
@@ -22,8 +20,6 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
         return await context.Menus
             .Include(m => m.Sections)
                 .ThenInclude(s => s.Items)
-                    .ThenInclude(i => i.MenuItemCategories)
-                        .ThenInclude(mic => mic.Category)
             .FirstOrDefaultAsync(m => m.CafeId == cafeId && m.State == MenuState.Active, cancellationToken);
     }
 

@@ -33,6 +33,10 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
             .HasForeignKey(e => e.MenuId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder
+            .Navigation(e => e.Sections)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         // Index for common query patterns
         builder.HasIndex(e => new { e.CafeId, e.CreatedAt });
         builder.HasIndex(e => new { e.CafeId, e.State });

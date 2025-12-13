@@ -17,7 +17,7 @@ public static class MenuMapper
             menu.Id,
             menu.Name,
             menu.State,
-            menu.Sections.Select(s => s.ToSectionDto(imageStorageService)).ToList(),
+            [.. menu.Sections.Select(s => s.ToSectionDto(imageStorageService))],
             menu.CreatedAt,
             menu.UpdatedAt
         );
@@ -37,10 +37,9 @@ public static class MenuMapper
         return new SectionDto(
             section.Id,
             section.Name,
-            section.DisplayOrder,
             section.AvailableFrom,
             section.AvailableTo,
-            section.Items.Select(i => i.ToMenuItemDto(imageStorageService)).ToList()
+            [.. section.Items.Select(i => i.ToMenuItemDto(imageStorageService))]
         );
     }
 
@@ -54,9 +53,7 @@ public static class MenuMapper
             item.Description,
             item.Price.ToPriceDto(),
             item.Image?.ToImageItemDto(imageStorageService),
-            item.IsActive,
-            item.MenuItemCategories.Select(c => c.CategoryId).ToList(),
-            item.IngredientOptions.Select(ing => ing.ToIngredientDto()).ToList()
+            [.. item.IngredientOptions.Select(ing => ing.ToIngredientDto())]
         );
     }
 
@@ -70,7 +67,9 @@ public static class MenuMapper
     private static MenuItemImageDto? ToImageItemDto(this ImageAsset? image, IImageStorageService imageStorageService)
     {
         if (image == null)
+        {
             return null;
+        }
 
         ArgumentException.ThrowIfNullOrWhiteSpace(image.OriginalPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(image.ThumbnailPath);
@@ -87,8 +86,7 @@ public static class MenuMapper
 
         return new IngredientDto(
             ingredient.Name,
-            ingredient.IsExcludable,
-            ingredient.IsIncludable
+            ingredient.IsExcludable
         );
     }
 }

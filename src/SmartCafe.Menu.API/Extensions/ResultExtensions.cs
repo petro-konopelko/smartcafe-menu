@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Domain.Common;
+using SmartCafe.Menu.Shared.Models;
 
 namespace SmartCafe.Menu.API.Extensions;
 
@@ -10,19 +10,37 @@ public static class ResultExtensions
 
         if (result.IsSuccess)
         {
-            return Results.Ok(result.Value);
+            return Results.Ok(result.EnsureValue());
         }
 
-        if (result.Error is null)
+        var error = result.EnsureError();
+        return error.Type switch
         {
-            throw new InvalidOperationException("The result is failure. Please specify the error.");
+            ErrorType.NotFound => Results.NotFound(new
+            {
+                error
+            }),
+            ErrorType.Validation => Results.BadRequest(new { error }),
+            ErrorType.Conflict => Results.Conflict(new { error }),
+            _ => throw new InvalidOperationException("Unhandled ErrorType mapping. Register a mapping for this status.")
+        };
+    }
+
+    public static IResult ToApiResult(this Result result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (result.IsSuccess)
+        {
+            return Results.NoContent();
         }
 
-        return result.Error.Type switch
+        var error = result.EnsureError();
+        return error.Type switch
         {
-            ErrorType.NotFound => Results.NotFound(new { error = result.Error }),
-            ErrorType.Validation => Results.BadRequest(new { error = result.Error }),
-            ErrorType.Conflict => Results.Conflict(new { error = result.Error }),
+            ErrorType.NotFound => Results.NotFound(new { error }),
+            ErrorType.Validation => Results.BadRequest(new { error }),
+            ErrorType.Conflict => Results.Conflict(new { error }),
             _ => throw new InvalidOperationException("Unhandled ErrorType mapping. Register a mapping for this status.")
         };
     }

@@ -9,6 +9,7 @@
     <ProjectReference Include="..\SmartCafe.Menu.Application\SmartCafe.Menu.Application.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.Infrastructure\SmartCafe.Menu.Infrastructure.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.ServiceDefaults\SmartCafe.Menu.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\SmartCafe.Menu.Shared\SmartCafe.Menu.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

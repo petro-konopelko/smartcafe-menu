@@ -1,7 +1,7 @@
 using SmartCafe.Menu.API.Extensions;
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain.Common;
+using SmartCafe.Menu.Shared.Models;
 
 namespace SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -20,7 +20,7 @@ public static class DeleteMenuEndpoint
             return result.ToNoContentResult();
         })
         .WithName("DeleteMenu")
-        .WithSummary("Delete a draft menu (published menus cannot be deleted)")
+        .WithSummary("Delete a new menu (published menus cannot be deleted)")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status404NotFound)

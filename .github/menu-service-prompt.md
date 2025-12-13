@@ -22,10 +22,10 @@ Create a .NET 10 Web API project for the Menu Service using Clean Architecture p
 1. **Menu Management:**
    - Each cafe can have **multiple menus** (e.g., Summer Menu, Winter Menu, Holiday Special)
    - Only **one menu is active** at a time
-   - Menu states: Draft, Published (Inactive), Active
-   - Create new menu (starts as draft)
+   - Menu states: New, Published (Inactive), Active
+   - Create new menu (starts as new)
    - Update menu details (name, sections, items)
-   - Delete menu (soft delete - only for unpublished drafts)
+   - Delete menu (soft delete - only for unpublished new menus)
    - List all menus (shows draft, published, active status)
    - **Activate menu**: Switch active menu (e.g., activate "Summer Menu" for summer season)
    - Publish menu (makes it available for activation)
@@ -44,17 +44,9 @@ Create a .NET 10 Web API project for the Menu Service using Clean Architecture p
    - Add items to sections
    - Update item details (name, description, price)
    - Delete items (soft delete)
-   - Assign multiple categories to items
    - Upload and manage item images (big and cropped)
    - Configure ingredient options (include/exclude)
    - Set default images when none provided
-
-4. **Category Management:**
-   - Create custom categories (beyond defaults: Vegetarian, Spicy)
-   - Update category details
-   - Delete categories
-   - Assign optional icons/images to categories
-   - List all categories with filtering
 
 5. **Image Management:**
    - Upload images to Azure Blob Storage
@@ -132,12 +124,6 @@ POST   /api/cafes/{cafeId}/menus/{menuId}/clone     - Clone menu to create new v
 # Image Management
 POST   /api/cafes/{cafeId}/menus/{menuId}/items/{itemId}/image  - Upload item image
 DELETE /api/cafes/{cafeId}/menus/{menuId}/items/{itemId}/image  - Delete item image
-
-# Categories (Global)
-GET    /api/categories              - List all categories
-POST   /api/categories              - Create custom category
-PUT    /api/categories/{categoryId} - Update category
-DELETE /api/categories/{categoryId} - Delete category
 ```
 
 **Configuration Requirements:**
@@ -203,7 +189,6 @@ DELETE /api/categories/{categoryId} - Delete category
 - Availability hours must be valid (from < to)
 - Image file size limits (max 5MB)
 - Supported image formats: JPEG, PNG, WebP
-- At least one category must be assigned to each item
 - Ingredient options must be valid
 - When publishing a new menu version:
   - Previous active menu must be deactivated
@@ -261,30 +246,10 @@ public class MenuItem
     public decimal Price { get; init; }
     public string? ImageBigUrl { get; set; }
     public string? ImageCroppedUrl { get; set; }
-    public ICollection<MenuItemCategory> MenuItemCategories { get; init; } = []; // Many-to-many
     public List<Ingredient> IngredientOptions { get; init; } = []; // Stored as JSONB
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; init; } // Set via IDateTimeProvider.UtcNow
     public DateTime UpdatedAt { get; set; } // Set via IDateTimeProvider.UtcNow
-}
-
-public class Category
-{
-    public Guid Id { get; init; } = Guid.CreateVersion7();
-    public required string Name { get; init; }
-    public string? IconUrl { get; set; }
-    public bool IsDefault { get; init; }
-    public ICollection<MenuItemCategory> MenuItemCategories { get; init; } = [];
-    public DateTime CreatedAt { get; init; } // Set via IDateTimeProvider.UtcNow
-}
-
-// Join table for many-to-many relationship
-public class MenuItemCategory
-{
-    public Guid MenuItemId { get; init; }
-    public MenuItem MenuItem { get; init; } = null!;
-    public Guid CategoryId { get; init; }
-    public Category Category { get; init; } = null!;
 }
 
 public class Ingredient
@@ -453,7 +418,7 @@ src/
 ├── SmartCafe.Menu.Migrator/             # Database migration tool
 │   └── Program.cs
 ├── SmartCafe.Menu.Domain/
-│   ├── Entities/                        # Menu, Section, MenuItem, Category
+│   ├── Entities/                        # Menu, Section, MenuItem
 │   ├── Events/                          # MenuCreatedEvent, MenuActivatedEvent, etc.
 │   ├── Exceptions/                      # MenuNotFoundException (used by domain only)
 │   ├── Interfaces/                      # IDateTimeProvider
@@ -513,7 +478,7 @@ src/
 │   │       │   ├── UploadImageHandler.cs
 │   │       │   └── Models/UploadImageResponse.cs
 │   │       └── Models/                  # Shared image models
-│   ├── Interfaces/                      # IMenuRepository, ICategoryRepository, IEventPublisher
+│   ├── Interfaces/                      # IMenuRepository, IEventPublisher
 │   ├── Features/*/Mappers/              # Manual static mappers per feature
 │   ├── Mediation/                       # Mediator pattern
 │   │   ├── Core/                        # IMediator, ICommandHandler, IQueryHandler
@@ -523,7 +488,7 @@ src/
 │   ├── Data/
 │   │   ├── MenuDbContext.cs
 │   │   └── Configurations/              # EF Core entity configurations
-│   ├── Repositories/                    # MenuRepository, CategoryRepository
+│   ├── Repositories/                    # MenuRepository
 │   ├── EventBus/
 │   │   └── ServiceBusPublisher.cs
 │   ├── BlobStorage/
@@ -706,11 +671,6 @@ public class CreateMenuHandler : ICommandHandler<CreateMenuRequest, Result<Creat
         if (menu == null)
             return Result<CreateMenuResponse>.Failure(Error.NotFound("Menu not found", "MENU_NOT_FOUND"));
         
-        // Validation
-        if (categories.Count == 0)
-            return Result<CreateMenuResponse>.Failure(Error.Validation(
-                new ErrorDetail("At least one category required", "CATEGORIES_REQUIRED")));
-        
         // Conflict
         if (menu.IsActive)
             return Result<CreateMenuResponse>.Failure(Error.Conflict(
@@ -757,20 +717,6 @@ public class ValidationBehavior<TRequest, T> : IPipelineBehavior<TRequest, Resul
 
 **Seed Data:**
 Create default categories using EF Core migrations or data seeding:
-```csharp
-// In DbContext OnModelCreating or separate seeding logic
-// Note: For seed data, using a fixed UTC timestamp is acceptable
-var seedTime = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-var vegetarianId = Guid.Parse("550e8400-e29b-41d4-a716-446655440001");
-var spicyId = Guid.Parse("550e8400-e29b-41d4-a716-446655440002");
-
-modelBuilder.Entity<Category>().HasData(
-    new Category { Id = vegetarianId, Name = "Vegetarian", IsDefault = true, CreatedAt = seedTime },
-    new Category { Id = spicyId, Name = "Spicy", IsDefault = true, CreatedAt = seedTime }
-);
-```
-
-**Minimal API Example:**
 ```csharp
 // Centralized route URLs in Endpoints/Menus/MenuRoutes.cs
 public static class MenuRoutes
@@ -1095,10 +1041,6 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             .HasColumnType("timestamp with time zone");
     });
     
-    // Many-to-many configuration
-    modelBuilder.Entity<MenuItemCategory>()
-        .HasKey(mc => new { mc.MenuItemId, mc.CategoryId });
-        
     // Global configuration for all DateTime properties to use UTC
     foreach (var entityType in modelBuilder.Model.GetEntityTypes())
     {

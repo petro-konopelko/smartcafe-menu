@@ -4,6 +4,9 @@ using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 
 namespace SmartCafe.Menu.Application.Features.Menus.Shared.Validators;
 
+/// <summary>
+/// Base validator for MenuItemDto - validates format only (no ID validation)
+/// </summary>
 public class MenuItemDtoValidator : AbstractValidator<MenuItemDto>
 {
     public MenuItemDtoValidator()
@@ -19,12 +22,31 @@ public class MenuItemDtoValidator : AbstractValidator<MenuItemDto>
             .NotNull().WithMessage(ValidationMessages.PriceRequired)
             .SetValidator(new PriceDtoValidator());
 
-        RuleFor(x => x.CategoryIds)
-            .NotEmpty().WithMessage(ValidationMessages.ItemMustHaveCategory)
-            .Must(categories => categories.Count <= 10)
-            .WithMessage(ValidationMessages.ItemMaxCategories);
-
         RuleForEach(x => x.Ingredients)
             .SetValidator(new IngredientValidator());
+    }
+}
+
+/// <summary>
+/// Validator for MenuItemDto in create scenarios - ID must be null
+/// </summary>
+public class MenuItemDtoForCreateValidator : MenuItemDtoValidator
+{
+    public MenuItemDtoForCreateValidator()
+    {
+        RuleFor(x => x.Id)
+            .Null().WithMessage(ValidationMessages.ItemIdMustBeNullForCreate);
+    }
+}
+
+/// <summary>
+/// Validator for MenuItemDto in update scenarios - ID must not be null
+/// </summary>
+public class MenuItemDtoForUpdateValidator : MenuItemDtoValidator
+{
+    public MenuItemDtoForUpdateValidator()
+    {
+        RuleFor(x => x.Id)
+            .NotEmpty().WithMessage(ValidationMessages.ItemIdRequired);
     }
 }

@@ -4,9 +4,9 @@ using Serilog;
 using SmartCafe.Menu.API.Extensions;
 using SmartCafe.Menu.API.Middleware;
 using SmartCafe.Menu.Application.DependencyInjection;
-using SmartCafe.Menu.Domain.Interfaces;
-using SmartCafe.Menu.Domain.Services;
 using SmartCafe.Menu.Infrastructure.DependencyInjection;
+using SmartCafe.Menu.Shared.Providers;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -38,6 +38,7 @@ try
 
     // Domain services
     builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+    builder.Services.AddSingleton<IGuidIdProvider, GuidIdProvider>();
 
     // Application and Infrastructure services
     builder.Services.AddInfrastructure(builder.Configuration);

@@ -2,10 +2,10 @@ using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.ActivateMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain;
-using SmartCafe.Menu.Domain.Common;
+using SmartCafe.Menu.Domain.Errors;
 using SmartCafe.Menu.Domain.Events;
-using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Shared.Models;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.Application.Features.Menus.ActivateMenu;
 
@@ -27,7 +27,7 @@ public class ActivateMenuHandler(
         {
             return Result<ActivateMenuResponse>.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                ErrorCodes.MenuNotFound));
+                MenuErrorCodes.MenuNotFound));
         }
 
         // Deactivate currently active menu via domain
@@ -36,14 +36,19 @@ public class ActivateMenuHandler(
         {
             var deactivation = currentActiveMenu.Deactivate(dateTimeProvider);
             if (deactivation.IsFailure)
+            {
                 return Result<ActivateMenuResponse>.Failure(deactivation.EnsureError());
+            }
+
             await menuRepository.UpdateAsync(currentActiveMenu, cancellationToken);
         }
 
         // Activate new menu via domain
         var activation = menu.Activate(dateTimeProvider);
         if (activation.IsFailure)
+        {
             return Result<ActivateMenuResponse>.Failure(activation.EnsureError());
+        }
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

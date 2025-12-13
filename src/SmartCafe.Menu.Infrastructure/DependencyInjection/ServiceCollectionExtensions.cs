@@ -28,7 +28,6 @@ public static class ServiceCollectionExtensions
         // Repositories and UoW
         services.AddScoped<ICafeRepository, CafeRepository>();
         services.AddScoped<IMenuRepository, MenuRepository>();
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Image processing and storage

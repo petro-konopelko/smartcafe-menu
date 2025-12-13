@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Domain.Common;
+namespace SmartCafe.Menu.Shared.Models;
 
 public enum ErrorType
 {
