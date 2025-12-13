@@ -31,7 +31,7 @@ jobs:
           path: coverage
 
       - name: Generate PR Coverage Summary
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.0
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.1
         with:
           reports: 'coverage/**/coverage.cobertura.xml'
           targetdir: 'coveragereport'
