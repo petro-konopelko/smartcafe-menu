@@ -12,6 +12,7 @@
     <Project Path="src/SmartCafe.Menu.Infrastructure/SmartCafe.Menu.Infrastructure.csproj" />
     <Project Path="src/SmartCafe.Menu.Migrator/SmartCafe.Menu.Migrator.csproj" />
     <Project Path="src/SmartCafe.Menu.ServiceDefaults/SmartCafe.Menu.ServiceDefaults.csproj" />
+    <Project Path="src/SmartCafe.Menu.Shared/SmartCafe.Menu.Shared.csproj" Id="cd939616-aef0-4398-94c0-ae158e99ea85" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SmartCafe.Menu.IntegrationTests/SmartCafe.Menu.IntegrationTests.csproj" />

@@ -1,7 +1,9 @@
-using SmartCafe.Menu.Domain.Exceptions;
-
 namespace SmartCafe.Menu.API.Middleware;
 
+/// <summary>
+/// Middleware to handle unexpected exceptions.
+/// Business errors are handled via Result pattern in handlers.
+/// </summary>
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
@@ -11,24 +13,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         try
         {
             await next(context);
-        }
-        catch (MenuNotFoundException ex)
-        {
-            logger.LogWarning(ex, "Menu not found: {MenuId}", ex.MenuId);
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
-        }
-        catch (CafeNotFoundException ex)
-        {
-            logger.LogWarning(ex, "Cafe not found: {CafeId}", ex.CafeId);
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
-        }
-        catch (InvalidMenuStateException ex)
-        {
-            logger.LogWarning(ex, "Invalid menu state: {Message}", ex.Message);
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
         }
         catch (Exception ex)
         {

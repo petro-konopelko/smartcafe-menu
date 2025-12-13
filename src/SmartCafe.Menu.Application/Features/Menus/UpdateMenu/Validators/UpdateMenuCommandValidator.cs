@@ -22,6 +22,6 @@ public class UpdateMenuCommandValidator : AbstractValidator<UpdateMenuCommand>
         RuleFor(x => x.Sections)
             .NotEmpty().WithMessage(ValidationMessages.MenuMustHaveSection);
 
-        RuleForEach(x => x.Sections).SetValidator(new SectionDtoValidator());
+        RuleForEach(x => x.Sections).SetValidator(new SectionDtoForUpdateValidator());
     }
 }

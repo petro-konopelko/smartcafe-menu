@@ -8,7 +8,7 @@ applyTo: "**"
 
 ## Project Overview
 
-This is the **Menu Service** for SmartCafe, a microservices-based smart ordering system. The Menu Service manages digital menus for cafes, including sections, items, categories, and images.
+This is the **Menu Service** for SmartCafe, a microservices-based smart ordering system. The Menu Service manages digital menus for cafes, including sections, items, and images.
 
 **Repository Context:**
 - This is a standalone microservice within the SmartCafe ecosystem
@@ -33,7 +33,7 @@ src/
 ├── SmartCafe.Menu.ServiceDefaults/      # Shared Aspire configuration
 ├── SmartCafe.Menu.Migrator/             # Database migration tool for local development
 ├── SmartCafe.Menu.Domain/               # Core business logic and entities
-│   ├── Entities/                        # Menu, Section, MenuItem, Category, etc.
+│   ├── Entities/                        # Menu, Section, MenuItem, etc.
 │   ├── Events/                          # Domain events (MenuCreated, MenuActivated, etc.)
 │   ├── Exceptions/                      # Domain exceptions (MenuNotFoundException)
 │   ├── Interfaces/                      # IDateTimeProvider
@@ -57,7 +57,7 @@ src/
 │   │   └── Images/                      # Image feature handlers
 │   │       ├── UploadImage/             # UploadImageCommand, UploadImageHandler
 │   │       └── Models/                  # Shared image models
-│   ├── Interfaces/                      # Repository interfaces (ICafeRepository, IMenuRepository, ICategoryRepository)
+│   ├── Interfaces/                      # Repository interfaces (ICafeRepository, IMenuRepository)
 │   ├── Mappings/                        # Mapperly mapper classes
 │   ├── Mediation/                       # Mediator pattern implementation
 │   │   ├── Core/                        # IMediator, IHandler interfaces
@@ -65,7 +65,7 @@ src/
 │   └── DependencyInjection/             # Application layer service registration
 ├── SmartCafe.Menu.Infrastructure/       # Data access (EF Core), Azure services
 │   ├── Data/                            # EF Core DbContext, configurations
-│   ├── Repositories/                    # Repository implementations (CafeRepository, MenuRepository, CategoryRepository)
+│   ├── Repositories/                    # Repository implementations (CafeRepository, MenuRepository)
 │   ├── EventBus/                        # Azure Service Bus publisher
 │   ├── BlobStorage/                     # Azure Blob Storage service
 │   ├── Services/                        # DateTimeProvider, ImageProcessingService
@@ -214,8 +214,8 @@ tests/
 ### Menus
 - A cafe can have **multiple menus** (e.g., Summer Menu, Winter Menu, Holiday Special)
 - Only **one menu can be active** at a time (enforced by unique partial index)
-- Menu states: Draft → Published → Active
-- **Draft**: Work in progress, not visible to customers, can be edited/deleted
+- Menu states: New → Published → Active
+- **New**: Work in progress, not visible to customers, can be edited/deleted
 - **Published**: Ready for activation, not currently active, cannot be deleted
 - **Active**: Currently displayed to customers, changes go live immediately
 - Must publish menu before it can be activated
@@ -233,20 +233,12 @@ tests/
 
 ### Menu Items
 - Items belong to one section
-- Items can have multiple categories (many-to-many relationship)
-- Items must have at least one category assigned
 - Price must be positive (enforced by CHECK constraint)
 - Images are optional; use defaults if none provided
 - Support two image types: big (main display) and cropped (thumbnail/fast scrolling)
 - Items can be soft-deleted (IsActive flag)
 - Ingredient options stored as JSONB in PostgreSQL
 - Each item identified by time-ordered GUID
-
-### Categories
-- Two default categories: Vegetarian, Spicy
-- Cafes can create custom categories
-- Categories can have optional icons/images
-- Categories are reusable across all cafes
 
 ### Images
 - Store in Azure Blob Storage
@@ -265,10 +257,10 @@ tests/
 
 Publish domain events to Azure Service Bus for integration:
 
-- `MenuCreatedEvent` - When a menu is created (draft)
+- `MenuCreatedEvent` - When a menu is created (new state)
 - `MenuUpdatedEvent` - When menu details or structure changes
 - `MenuDeletedEvent` - When a menu is soft-deleted
-- `MenuPublishedEvent` - When a menu is published (draft → published)
+- `MenuPublishedEvent` - When a menu is published (new → published)
 - `MenuActivatedEvent` - When a menu is activated (becomes active for customers)
 - `MenuDeactivatedEvent` - When a menu is deactivated (replaced by another)
 - `MenuClonedEvent` - When a menu is cloned to create a new menu

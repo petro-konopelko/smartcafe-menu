@@ -1,9 +1,9 @@
 using SmartCafe.Menu.Application.Features.Menus.DeleteMenu.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain;
-using SmartCafe.Menu.Domain.Common;
-using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Domain.Errors;
+using SmartCafe.Menu.Shared.Models;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
 
@@ -26,12 +26,14 @@ public class DeleteMenuHandler(
         {
             return Result.Failure(Error.NotFound(
                 $"Menu with ID {request.MenuId} not found",
-                ErrorCodes.MenuNotFound));
+                MenuErrorCodes.MenuNotFound));
         }
 
         var deletion = menu.SoftDelete(dateTimeProvider);
         if (deletion.IsFailure)
+        {
             return Result.Failure(deletion.EnsureError());
+        }
 
         await menuRepository.UpdateAsync(menu, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

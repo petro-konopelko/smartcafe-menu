@@ -24,7 +24,7 @@ The Menu Service implements a clear separation between input validation and busi
 - **Examples**:
   - Cafe exists check
   - Menu exists and belongs to cafe
-  - Menu state transitions (Draft → Published → Active)
+  - Menu state transitions (New → Published → Active)
 
 ## Error Codes
 
@@ -34,10 +34,9 @@ Centralized in `Domain/ErrorCodes.cs`:
 // Resource Not Found (404)
 ErrorCodes.CafeNotFound
 ErrorCodes.MenuNotFound
-ErrorCodes.CategoryNotFound
 
 // Validation (400)
-ErrorCodes.CategoriesNotFound
+// (validation-specific errors)
 
 // Conflict (409)
 ErrorCodes.MenuAlreadyActive
@@ -75,8 +74,6 @@ ValidationMessages.ItemNameRequired
 ValidationMessages.ItemNameMaxLength
 ValidationMessages.ItemDescriptionMaxLength
 ValidationMessages.ItemPriceGreaterThanZero
-ValidationMessages.ItemMustHaveCategory
-ValidationMessages.ItemMaxCategories
 
 // Ingredient Validation
 ValidationMessages.IngredientNameRequired
@@ -105,10 +102,6 @@ ValidationMessages.IngredientNameMaxLength
    // Check existence + ownership
    if (menu == null || menu.CafeId != request.CafeId)
        return Result.Failure(Error.NotFound(..., ErrorCodes.MenuNotFound));
-   
-   // Check business rules (e.g., categories exist)
-   if (missingCategories.Any())
-       return Result.Failure(Error.Validation(..., ErrorCodes.CategoriesNotFound));
    ```
    - ❌ Fails → Returns `404 Not Found` or `409 Conflict`
    - ✅ Passes → Execute business logic

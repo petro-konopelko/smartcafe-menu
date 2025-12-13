@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Domain.Interfaces;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.UnitTests.Fakes;
 

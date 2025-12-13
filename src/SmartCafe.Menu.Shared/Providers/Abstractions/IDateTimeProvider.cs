@@ -1,4 +1,4 @@
-namespace SmartCafe.Menu.Domain.Interfaces;
+namespace SmartCafe.Menu.Shared.Providers.Abstractions;
 
 /// <summary>
 /// Provides abstraction for DateTime operations to enable testability

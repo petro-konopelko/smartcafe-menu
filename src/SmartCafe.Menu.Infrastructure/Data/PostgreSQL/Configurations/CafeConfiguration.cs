@@ -22,5 +22,8 @@ public class CafeConfiguration : IEntityTypeConfiguration<Domain.Entities.Cafe>
             .HasMaxLength(500);
 
         builder.HasIndex(e => e.Name);
+
+        // Ignore domain events collection (not persisted)
+        builder.Ignore(e => e.DomainEvents);
     }
 }

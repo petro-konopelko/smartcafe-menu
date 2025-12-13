@@ -2,7 +2,7 @@ using SmartCafe.Menu.Application.Features.Menus.ListMenus.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.ListMenus.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain.Common;
+using SmartCafe.Menu.Shared.Models;
 
 namespace SmartCafe.Menu.Application.Features.Menus.ListMenus;
 
@@ -17,7 +17,7 @@ public class ListMenusHandler(IMenuRepository menuRepository) : IQueryHandler<Li
         var menus = await menuRepository.GetAllByCafeIdAsync(request.CafeId, cancellationToken);
 
         return Result<ListMenusResponse>.Success(new ListMenusResponse(
-            menus.Select(m => m.ToSummaryDto()).ToList()
+            [.. menus.Select(m => m.ToSummaryDto())]
         ));
     }
 }

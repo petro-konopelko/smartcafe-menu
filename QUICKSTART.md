@@ -10,19 +10,13 @@ The Menu Service is **fully functional** with all core features:
 - `POST /api/cafes/{cafeId}/menus/upsert` - ⭐ **Main endpoint** - Create/update complete menu
 - `GET /api/cafes/{cafeId}/menus` - List all menus for a cafe
 - `GET /api/cafes/{cafeId}/menus/{menuId}` - Get menu details
-- `DELETE /api/cafes/{cafeId}/menus/{menuId}` - Delete draft menu + images
+- `DELETE /api/cafes/{cafeId}/menus/{menuId}` - Delete new menu + images
 - `POST /api/cafes/{cafeId}/menus/{menuId}/publish` - Publish menu
 - `POST /api/cafes/{cafeId}/menus/{menuId}/activate` - Activate menu
 - `GET /api/cafes/{cafeId}/menus/active` - Get active menu (public)
 
 **Image Management**
 - `POST /api/images/upload` - Upload item image (returns full + cropped URLs)
-
-**Categories**
-- `GET /api/categories` - List all categories
-- `POST /api/categories` - Create custom category
-- `PUT /api/categories/{id}` - Update category
-- `DELETE /api/categories/{id}` - Delete category
 
 ### Architecture Features
 - ✅ Clean Architecture with Vertical Slices
@@ -74,7 +68,7 @@ dotnet ef database update --startup-project ../SmartCafe.Menu.API
 
 ### 1. Create a Cafe (First Time Setup)
 
-Since menus belong to cafes, you'll need a cafe ID. The database is seeded with two default categories (Vegetarian and Spicy) but you need to create a cafe first.
+Since menus belong to cafes, you'll need a cafe ID. You need to create a cafe first.
 
 **Option A: Use a predefined GUID**
 ```
@@ -138,9 +132,6 @@ VALUES (
           "originalImageUrl": "https://.../original.jpg",
           "thumbnailImageUrl": "https://.../thumbnail.jpg",
           "isAvailable": true,
-          "categoryIds": [
-            "01936f99-7ef5-7d14-a482-0a5e379288e6"
-          ],
           "ingredients": [
             {
               "name": "Avocado",
@@ -248,7 +239,7 @@ After the application is running, you can:
 
 1. **Test the complete workflow**:
    - Upload images
-   - Create a draft menu
+   - Create a new menu
    - Publish it
    - Activate it
    - Retrieve active menu

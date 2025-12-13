@@ -3,8 +3,8 @@ using SmartCafe.Menu.Application.Features.Menus.Shared.Mappers;
 using SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Application.Mediation.Core;
-using SmartCafe.Menu.Domain;
-using SmartCafe.Menu.Domain.Common;
+using SmartCafe.Menu.Domain.Errors;
+using SmartCafe.Menu.Shared.Models;
 
 namespace SmartCafe.Menu.Application.Features.Menus.GetActiveMenu;
 
@@ -21,7 +21,7 @@ public class GetActiveMenuHandler(IMenuRepository menuRepository, IImageStorageS
         return menu is null
             ? Result<MenuDto>.Failure(Error.NotFound(
                 $"No active menu found for cafe {request.CafeId}",
-                ErrorCodes.MenuNotFound))
+                MenuErrorCodes.MenuNotFound))
             : Result<MenuDto>.Success(menu.ToMenuDto(imageStorageService));
     }
 }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SmartCafe.Menu.Domain\SmartCafe.Menu.Domain.csproj" />
+    <ProjectReference Include="..\SmartCafe.Menu.Shared\SmartCafe.Menu.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

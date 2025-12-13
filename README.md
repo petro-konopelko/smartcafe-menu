@@ -17,11 +17,11 @@ A .NET 10 microservice for managing digital menus in the SmartCafe smart orderin
 ## 🚀 Features
 
 - **Multi-Menu Management**: Cafes can have multiple menus (e.g., Summer, Winter, Holiday)
-- **Menu States**: Draft → Published → Active (only one active menu per cafe)
+- **Menu States**: New → Published → Active (only one active menu per cafe)
 - **Menu Activation**: Switch active menus seamlessly
 - **Menu Cloning**: Create variations from existing menus
 - **Section Management**: Organize items by meal type with availability hours
-- **Item Management**: Full CRUD with categories, images, and ingredients
+- **Item Management**: Full CRUD with images and ingredients
 - **Image Processing**: Auto-generate cropped thumbnails
 - **Event Publishing**: Publish domain events to Azure Service Bus
 - **Time-Ordered GUIDs**: Use `Guid.CreateVersion7()` for better database performance
@@ -165,7 +165,7 @@ group.MapPost("/", async (Guid cafeId, CreateMenuRequest request, IMediator medi
     return result.ToCreatedResult(response => $"/api/cafes/{cafeId}/menus/{response.Id}");
 })
 .WithName("CreateMenu")
-.WithSummary("Create a new menu in draft state");
+.WithSummary("Create a new menu in New state");
 ```
 
 **Error Types:**
@@ -286,11 +286,9 @@ public class Menu
 
 ### Key Tables
 - `Cafes` - Cafe information
-- `Menus` - Menu definitions with state (Draft/Published/Active)
+- `Menus` - Menu definitions with state (New/Published/Active)
 - `Sections` - Menu sections (Breakfast, Lunch, etc.)
 - `MenuItems` - Individual menu items
-- `Categories` - Item categories (Vegetarian, Spicy, custom)
-- `MenuItemCategories` - Many-to-many join table
 
 ### Important Constraints
 - **Unique partial index**: Only one active menu per cafe
@@ -328,10 +326,10 @@ docker run -p 5000:8080 smartcafe-menu:latest
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/cafes/{cafeId}/menus` | List all menus |
-| POST | `/api/cafes/{cafeId}/menus` | Create new menu (draft) |
+| POST | `/api/cafes/{cafeId}/menus` | Create new menu (new) |
 | GET | `/api/cafes/{cafeId}/menus/{menuId}` | Get menu details |
 | PUT | `/api/cafes/{cafeId}/menus/{menuId}` | Update menu |
-| DELETE | `/api/cafes/{cafeId}/menus/{menuId}` | Delete menu (draft only) |
+| DELETE | `/api/cafes/{cafeId}/menus/{menuId}` | Delete menu (new only) |
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/publish` | Publish menu |
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/activate` | Activate menu |
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/clone` | Clone menu |
@@ -374,7 +372,7 @@ public static RouteGroupBuilder MapPublishMenu(this RouteGroupBuilder group)
         return result.ToNoContentResult(); // Auto-maps errors to HTTP status
     })
     .WithName("PublishMenu")
-    .WithSummary("Publish a draft menu to make it ready for activation");
+    .WithSummary("Publish a new menu to make it ready for activation");
     
     return group;
 }
@@ -432,14 +430,14 @@ All handlers follow the **Result Pattern** - returning `Result<T>` instead of th
 - Shared DTOs live under `Features/Menus/Shared`, but mapping stays close to the feature for clarity and maintainability.
 
 **Menu Handlers** (Application/Features/Menus/):
-- `CreateMenuHandler` - Create new menu in draft state
+- `CreateMenuHandler` - Create new menu in New state
 - `UpdateMenuHandler` - Update existing menu structure
-- `DeleteMenuHandler` - Delete draft menus with blob cleanup
+- `DeleteMenuHandler` - Delete New menus with blob cleanup
 - `GetMenuHandler` - Retrieve menu details by ID
 - `GetActiveMenuHandler` - Get currently active menu for customers
 - `ListMenusHandler` - List all menus for a cafe with pagination
 - `ActivateMenuHandler` - Activate a published menu (deactivates previous)
-- `PublishMenuHandler` - Publish a draft menu (ready for activation)
+- `PublishMenuHandler` - Publish a new menu (ready for activation)
 - `CloneMenuHandler` - Clone existing menu to create variations
 
 **Image Handlers** (Application/Features/Images/):
@@ -528,7 +526,7 @@ act pull_request -j build-and-test
 
 ### Image Management Optimization
 - **Orphan Image Cleanup Service**: Implement background job to detect and delete orphaned images from blob storage
-  - Find images in blob storage not referenced in any menu (deleted items, abandoned drafts)
+  - Find images in blob storage not referenced in any menu (deleted items, abandoned new menus)
   - Delete images for menus deleted >3 days ago (grace period for restoration)
   - Delete orphaned item images older than 7 days
   - Can be implemented as:

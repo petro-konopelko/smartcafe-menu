@@ -1,4 +1,4 @@
-using SmartCafe.Menu.Domain.ValueObjects;
+using SmartCafe.Menu.Domain.Enums;
 
 namespace SmartCafe.Menu.Application.Features.Menus.Shared.Models;
 
