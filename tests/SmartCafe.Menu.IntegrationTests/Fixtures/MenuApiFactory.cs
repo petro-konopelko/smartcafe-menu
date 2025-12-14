@@ -32,7 +32,7 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         });
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _dbContainer.StartAsync();
 
@@ -42,9 +42,10 @@ public class MenuApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await db.Database.MigrateAsync();
     }
 
-    public new async Task DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
+        await base.DisposeAsync();
     }
 }
