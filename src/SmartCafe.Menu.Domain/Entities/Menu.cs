@@ -82,6 +82,7 @@ public class Menu : Entity
         IGuidIdProvider idProvider)
     {
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(idProvider);
 
         var utcNow = clock.UtcNow;
 
@@ -92,30 +93,16 @@ public class Menu : Entity
     {
         ArgumentNullException.ThrowIfNull(clock);
 
-        if (State == MenuState.Deleted)
-        {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
-        }
-
         if (State != MenuState.Published)
         {
             return Result.Failure(Error.Conflict("Menu is not published", MenuErrorCodes.MenuNotPublished));
         }
 
-        if (State == MenuState.Active)
-        {
-            return Result.Failure(Error.Conflict("Menu is already active", MenuErrorCodes.MenuAlreadyActive));
-        }
+        var validationResult = ValidateSectionsAndItems(Sections, s => s.Items, MenuState.Active);
 
-        if (Sections.Count == 0)
+        if (validationResult.IsFailure)
         {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", MenuErrorCodes.MenuHasNoSections)));
-        }
-
-        var hasItems = Sections.Any(s => s.Items.Count > 0);
-        if (!hasItems)
-        {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", MenuErrorCodes.MenuHasNoItems)));
+            return validationResult;
         }
 
         State = MenuState.Active;
@@ -140,20 +127,21 @@ public class Menu : Entity
             return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
         }
 
+        if (State == MenuState.Active)
+        {
+            return Result.Failure(Error.Conflict("Menu is already active", MenuErrorCodes.MenuAlreadyActive));
+        }
+
         if (State == MenuState.Published)
         {
             return Result.Failure(Error.Conflict("Menu is already published", MenuErrorCodes.MenuAlreadyPublished));
         }
 
-        if (Sections.Count == 0)
-        {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", MenuErrorCodes.MenuHasNoSections)));
-        }
+        var validationResult = ValidateSectionsAndItems(Sections, s => s.Items, MenuState.Published);
 
-        var hasItems = Sections.Any(s => s.Items.Count > 0);
-        if (!hasItems)
+        if (validationResult.IsFailure)
         {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", MenuErrorCodes.MenuHasNoItems)));
+            return validationResult;
         }
 
         State = MenuState.Published;
@@ -172,11 +160,6 @@ public class Menu : Entity
     public Result Deactivate(IDateTimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(clock);
-
-        if (State == MenuState.Deleted)
-        {
-            return Result.Failure(Error.Validation(new ErrorDetail("Menu is deleted", MenuErrorCodes.MenuNotFound)));
-        }
 
         if (State != MenuState.Active)
         {
@@ -219,7 +202,7 @@ public class Menu : Entity
         return Result.Success();
     }
 
-    private Result<string> ValidateName(string name)
+    private static Result<string> ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -240,6 +223,13 @@ public class Menu : Entity
         if (nameResult.IsFailure)
         {
             return nameResult;
+        }
+
+        var validationResult = ValidateSectionsAndItems(sections, s => s.Items, State);
+
+        if (validationResult.IsFailure)
+        {
+            return validationResult;
         }
 
         var syncSectionsResult = SyncSections(sections, idProvider, utcNow);
@@ -275,6 +265,28 @@ public class Menu : Entity
               (section, sectionInfo) => section.SyncItems(idProvider, sectionInfo.Items, utcNow));
     }
 
+    private static Result ValidateSectionsAndItems<TSection, TItem>(
+        IReadOnlyCollection<TSection> sections,
+        Func<TSection, IReadOnlyCollection<TItem>> getItemsFunc,
+        MenuState targetState)
+    {
+        if (targetState == MenuState.Published || targetState == MenuState.Active)
+        {
+            if (sections.Count == 0)
+            {
+                return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one section", MenuErrorCodes.MenuHasNoSections)));
+            }
+
+            var hasItems = sections.Any(s => getItemsFunc(s).Count > 0);
+
+            if (!hasItems)
+            {
+                return Result.Failure(Error.Validation(new ErrorDetail("Menu must have at least one item", MenuErrorCodes.MenuHasNoItems)));
+            }
+        }
+
+        return Result.Success();
+    }
 
 }
 

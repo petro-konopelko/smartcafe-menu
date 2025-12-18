@@ -1,18 +1,11 @@
 namespace SmartCafe.Menu.Domain.Models;
 
-public sealed class ItemUpdateInfo(
-    Guid? id,
-    string name,
-    string? description,
-    PriceUpdateInfo price,
-    ImageUpdateInfo? image,
-    IReadOnlyCollection<IngredientItemUpdate> ingredients
+public record ItemUpdateInfo(
+    Guid? Id,
+    string Name,
+    string? Description,
+    PriceUpdateInfo Price,
+    ImageUpdateInfo? Image,
+    IReadOnlyCollection<IngredientItemUpdate> Ingredients
 ) : IUpdateInfoIdentity
-{
-    public Guid? Id => id;
-    public string Name => name;
-    public string? Description => description;
-    public PriceUpdateInfo Price => price;
-    public ImageUpdateInfo? Image => image;
-    public IReadOnlyCollection<IngredientItemUpdate> Ingredients => ingredients;
-}
+{ }

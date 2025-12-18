@@ -40,7 +40,16 @@ public sealed class Result<T> : Result
 
     public T EnsureValue()
     {
-        return IsFailure || Value is null ? throw new InvalidOperationException("Cannot retrieve the value from a failed result.") : Value;
+        return IsFailure || Value is null
+            ? throw new InvalidOperationException($"Cannot retrieve the value from a failed result. Message: {GetFailureMessage()}")
+            : Value;
+    }
+
+    private string GetFailureMessage()
+    {
+        return Error is null
+            ? "Unknown error"
+            : $"Error type: {Error.Type}, Message: {string.Join(", ", Error.Details.Select(d => d.Message))}";
     }
 }
 

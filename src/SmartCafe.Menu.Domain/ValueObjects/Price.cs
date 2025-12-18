@@ -25,7 +25,7 @@ public sealed record Price
         Discount = discount;
     }
 
-    public static Result<Price> Create(decimal amount, PriceUnit unit, decimal discount)
+    internal static Result<Price> Create(decimal amount, PriceUnit unit, decimal discount)
     {
         List<ErrorDetail> errors = [];
 
