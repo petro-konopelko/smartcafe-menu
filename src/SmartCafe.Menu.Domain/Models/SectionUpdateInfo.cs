@@ -1,16 +1,10 @@
 namespace SmartCafe.Menu.Domain.Models;
 
-public sealed class SectionUpdateInfo(
-    Guid? id,
-    string name,
-    TimeSpan? availableFrom,
-    TimeSpan? availableTo,
-    IReadOnlyCollection<ItemUpdateInfo> items
+public record SectionUpdateInfo(
+    Guid? Id,
+    string Name,
+    TimeSpan? AvailableFrom,
+    TimeSpan? AvailableTo,
+    IReadOnlyCollection<ItemUpdateInfo> Items
 ) : IUpdateInfoIdentity
-{
-    public Guid? Id => id;
-    public string Name => name;
-    public TimeSpan? AvailableFrom => availableFrom;
-    public TimeSpan? AvailableTo => availableTo;
-    public IReadOnlyCollection<ItemUpdateInfo> Items => items;
-}
+{ }

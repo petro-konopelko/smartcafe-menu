@@ -72,11 +72,11 @@ public class CloneMenuHandler(
             .ToArray();
 
         return new SectionUpdateInfo(
-            id: null, // exclude existing ID for cloning
-            name: section.Name,
-            availableFrom: section.AvailableFrom,
-            availableTo: section.AvailableTo,
-            items: itemUpdateInfos);
+            Id: null, // exclude existing ID for cloning
+            Name: section.Name,
+            AvailableFrom: section.AvailableFrom,
+            AvailableTo: section.AvailableTo,
+            Items: itemUpdateInfos);
     }
 
     private ItemUpdateInfo ToUpdateItemInfo(MenuItem item)
@@ -97,11 +97,11 @@ public class CloneMenuHandler(
             .ToArray();
 
         return new ItemUpdateInfo(
-            id: null, // exclude existing ID for cloning
-            name: item.Name,
-            description: item.Description,
-            price: price,
-            image: image,
-            ingredients: ingredients);
+            Id: null, // exclude existing ID for cloning
+            Name: item.Name,
+            Description: item.Description,
+            Price: price,
+            Image: image,
+            Ingredients: ingredients);
     }
 }

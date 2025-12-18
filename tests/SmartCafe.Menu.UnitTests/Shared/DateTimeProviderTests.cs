@@ -1,6 +1,6 @@
 using SmartCafe.Menu.UnitTests.Fakes;
 
-namespace SmartCafe.Menu.UnitTests.Domain;
+namespace SmartCafe.Menu.UnitTests.Shared;
 
 public class DateTimeProviderTests
 {
