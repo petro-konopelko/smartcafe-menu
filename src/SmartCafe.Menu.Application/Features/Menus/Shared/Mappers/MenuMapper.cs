@@ -71,6 +71,11 @@ public static class MenuMapper
             return null;
         }
 
+        if (string.IsNullOrWhiteSpace(image.OriginalPath) && string.IsNullOrWhiteSpace(image.ThumbnailPath))
+        {
+            return null;
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(image.OriginalPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(image.ThumbnailPath);
 
