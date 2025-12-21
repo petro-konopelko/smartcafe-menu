@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <ProjectReference Include="..\SmartCafe.Menu.API\SmartCafe.Menu.API.csproj" />
     <ProjectReference Include="..\SmartCafe.Menu.Migrator\SmartCafe.Menu.Migrator.csproj" />
   </ItemGroup>
