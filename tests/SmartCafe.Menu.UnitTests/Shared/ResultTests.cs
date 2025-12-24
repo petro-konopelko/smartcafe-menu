@@ -5,6 +5,21 @@ namespace SmartCafe.Menu.UnitTests.Shared;
 public class ResultTests
 {
     [Fact]
+    public void EnsureSuccess_DoesNotThrow_OnSuccess()
+    {
+        // Arrange
+        var result = Result.Success();
+
+        // Act
+        var ex = Record.Exception(() => result.EnsureSuccess());
+
+        // Assert
+        Assert.Null(ex);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+    }
+
+    [Fact]
     public void EnsureError_ReturnsError_OnFailure()
     {
         // Arrange
@@ -36,6 +51,27 @@ public class ResultTests
         Assert.Equal(expectedValue, ensured);
         Assert.True(result.IsSuccess);
         Assert.False(result.IsFailure);
+    }
+
+    [Fact]
+    public void EnsureSuccess_Throws_OnFailure_IncludesErrorDetails()
+    {
+        // Arrange
+        var firstDetailMessage = "Bad field";
+        var secondDetailMessage = "Another issue";
+        var error = Error.Validation(
+        [
+            new ErrorDetail(firstDetailMessage, "BAD_FIELD", "field"),
+            new ErrorDetail(secondDetailMessage, "ANOTHER")
+        ]);
+        var result = Result.Failure(error);
+        var expectedHeader = "Operation failed";
+
+        // Act + Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => result.EnsureSuccess());
+        Assert.Contains(expectedHeader, ex.Message);
+        Assert.Contains(firstDetailMessage, ex.Message);
+        Assert.Contains(secondDetailMessage, ex.Message);
     }
 
     [Fact]

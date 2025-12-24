@@ -1,6 +1,6 @@
 using SmartCafe.Menu.Shared.Providers.Abstractions;
 
-namespace SmartCafe.Menu.UnitTests.Fakes;
+namespace SmartCafe.Menu.Tests.Shared.Mocks;
 
 /// <summary>
 /// Fake implementation of IDateTimeProvider for testing
@@ -13,8 +13,8 @@ public class FakeDateTimeProvider : IDateTimeProvider
     public DateTime UtcNow => _utcNow;
     public DateTime Now => _utcNow.ToLocalTime();
     public DateTime Today => _utcNow.Date;
-    public DateTimeOffset UtcNowOffset => new DateTimeOffset(_utcNow);
-    public DateTimeOffset NowOffset => new DateTimeOffset(_utcNow.ToLocalTime());
+    public DateTimeOffset UtcNowOffset => new(_utcNow);
+    public DateTimeOffset NowOffset => new(_utcNow.ToLocalTime());
 
     /// <summary>
     /// Set the current UTC time for testing

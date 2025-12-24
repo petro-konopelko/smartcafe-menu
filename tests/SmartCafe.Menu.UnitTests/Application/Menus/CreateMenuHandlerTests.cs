@@ -3,7 +3,7 @@ using SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 using SmartCafe.Menu.Application.Interfaces;
 using SmartCafe.Menu.Domain.Errors;
 using SmartCafe.Menu.Shared.Models;
-using SmartCafe.Menu.UnitTests.Fakes;
+using SmartCafe.Menu.Tests.Shared.Mocks;
 using SmartCafe.Menu.UnitTests.Shared;
 
 using DomainEvent = SmartCafe.Menu.Domain.Events.DomainEvent;

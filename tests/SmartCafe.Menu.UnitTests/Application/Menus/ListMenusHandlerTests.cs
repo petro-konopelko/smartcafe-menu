@@ -2,7 +2,7 @@ using NSubstitute;
 using SmartCafe.Menu.Application.Features.Menus.ListMenus;
 using SmartCafe.Menu.Application.Features.Menus.ListMenus.Models;
 using SmartCafe.Menu.Application.Interfaces;
-using SmartCafe.Menu.UnitTests.Fakes;
+using SmartCafe.Menu.Tests.Shared.Mocks;
 using SmartCafe.Menu.UnitTests.Shared;
 
 namespace SmartCafe.Menu.UnitTests.Application.Menus;

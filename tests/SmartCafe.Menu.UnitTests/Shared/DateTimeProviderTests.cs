@@ -1,4 +1,4 @@
-using SmartCafe.Menu.UnitTests.Fakes;
+using SmartCafe.Menu.Tests.Shared.Mocks;
 
 namespace SmartCafe.Menu.UnitTests.Shared;
 

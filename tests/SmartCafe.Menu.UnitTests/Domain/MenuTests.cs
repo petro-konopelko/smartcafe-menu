@@ -1,13 +1,12 @@
-using Bogus;
 using SmartCafe.Menu.Domain.Enums;
 using SmartCafe.Menu.Domain.Errors;
 using SmartCafe.Menu.Domain.Events;
 using SmartCafe.Menu.Domain.Models;
 using SmartCafe.Menu.Shared.Models;
 using SmartCafe.Menu.Shared.Providers.Abstractions;
-using SmartCafe.Menu.UnitTests.DataGenerators;
+using SmartCafe.Menu.Tests.Shared.DataGenerators;
+using SmartCafe.Menu.Tests.Shared.Mocks;
 using SmartCafe.Menu.UnitTests.Extensions;
-using SmartCafe.Menu.UnitTests.Fakes;
 using SmartCafe.Menu.UnitTests.Shared;
 
 using MenuEntity = SmartCafe.Menu.Domain.Entities.Menu;
@@ -17,7 +16,6 @@ namespace SmartCafe.Menu.UnitTests.Domain;
 public class MenuTests
 {
     private readonly Guid _cafeId = Guid.NewGuid();
-    private readonly Faker _faker = new();
     private readonly FakeDateTimeProvider _clock = new();
     private readonly SequenceGuidIdProvider _idProvider = new();
 
@@ -27,13 +25,13 @@ public class MenuTests
     public void Create_ReturnsCompleteMenuWithCorrectStructure_WhenAllInputValid()
     {
         // Arrange
-        var menuName = _faker.Company.CatchPhrase();
-        var createdAt = _faker.Date.Recent().ToUniversalTime();
+        var menuName = MenuDataGenerator.GenerateValidMenuName();
+        var createdAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(createdAt);
 
         SectionUpdateInfo[] sections = [
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo(itemCount: 2),
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo()
+            MenuDataGenerator.GenerateSectionInfo(itemCount: 2),
+            MenuDataGenerator.GenerateSectionInfo()
         ];
 
         // Act
@@ -62,28 +60,28 @@ public class MenuTests
     public void SyncMenu_UpdatesMenuStructureCorrectly_WhenValidChanges()
     {
         // Arrange
-        var initialMenuName = _faker.Company.CatchPhrase();
+        var initialMenuName = MenuDataGenerator.GenerateValidMenuName();
         SectionUpdateInfo[] initialSections = [
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo(itemCount: 3),
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo()
+            MenuDataGenerator.GenerateSectionInfo(itemCount: 3),
+            MenuDataGenerator.GenerateSectionInfo()
         ];
 
-        var createdAt = _faker.Date.Recent().ToUniversalTime();
+        var createdAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(createdAt);
 
         var menu = MenuEntity.Create(_cafeId, initialMenuName, _idProvider, _clock, initialSections).EnsureValue();
 
-        var updatedAt = _faker.Date.Recent().ToUniversalTime();
+        var updatedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(updatedAt);
 
         var firstSection = menu.Sections.First();
 
         SectionUpdateInfo[] updatedSections = [
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo(
+            MenuDataGenerator.GenerateSectionInfo(
                 firstSection.Id,
                 itemCount: 2,
                 [null, firstSection.Items.First().Id]),
-            UpdateInfoDataGenerator.GenerateUpdateSectionInfo()
+            MenuDataGenerator.GenerateSectionInfo()
         ];
 
         var updatedMenuName = initialMenuName + " - Updated";
@@ -105,12 +103,12 @@ public class MenuTests
     public void Publish_SetsPublishedStateAndAddsEvent_WhenMenuValid()
     {
         // Arrange
-        var menuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var menuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
         var menu = MenuEntity.Create(_cafeId, menuName, _idProvider, _clock, sections).EnsureValue();
         menu.ClearDomainEvents();
 
-        var publishedAt = _faker.Date.Recent().ToUniversalTime();
+        var publishedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(publishedAt);
 
         // Act
@@ -136,13 +134,13 @@ public class MenuTests
     public void Activate_SetsActiveStateAndAddsEvent_WhenMenuPublished()
     {
         // Arrange
-        var menuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var menuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
         var menu = MenuEntity.Create(_cafeId, menuName, _idProvider, _clock, sections).EnsureValue();
         menu.Publish(_clock);
         menu.ClearDomainEvents();
 
-        var activatedAt = _faker.Date.Recent().ToUniversalTime();
+        var activatedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(activatedAt);
 
         // Act
@@ -168,13 +166,13 @@ public class MenuTests
     public void Deactivate_SetsPublishedStateAndAddsEvent_WhenMenuActive()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         menu.Publish(_clock);
         menu.Activate(_clock);
         menu.ClearDomainEvents();
 
-        var deactivatedAt = _faker.Date.Recent().ToUniversalTime();
+        var deactivatedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(deactivatedAt);
 
         // Act
@@ -200,12 +198,12 @@ public class MenuTests
     public void SoftDelete_SetsDeletedStateAndAddsEvent_WhenMenuIsInState(MenuState targetState)
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         ChangeState(menu, targetState);
         menu.ClearDomainEvents();
 
-        var deletedAt = _faker.Date.Recent().ToUniversalTime();
+        var deletedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(deletedAt);
 
         // Act
@@ -229,14 +227,14 @@ public class MenuTests
     public void SoftDelete_ReturnsSuccess_WhenMenuAlreadyDeleted()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var createdAt = _faker.Date.Recent().ToUniversalTime();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var createdAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(createdAt);
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         menu.SoftDelete(_clock);
         menu.ClearDomainEvents();
 
-        var deletedAt = _faker.Date.Recent().ToUniversalTime();
+        var deletedAt = DateGenerator.GenerateRecentUtcDateTime();
         _clock.SetUtcNow(deletedAt);
 
         // Act
@@ -279,8 +277,8 @@ public class MenuTests
     public void Create_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        var menuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var menuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -291,8 +289,8 @@ public class MenuTests
     public void Create_ThrowsArgumentNullException_WhenIdProviderIsNull()
     {
         // Arrange
-        var menuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var menuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -306,12 +304,12 @@ public class MenuTests
     public void Sync_ReturnsValidationError_WhenNameMissing(string? menuName)
     {
         // Arrange
-        var initialMenuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] initialSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var initialMenuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] initialSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         var menu = MenuEntity.Create(_cafeId, initialMenuName, _idProvider, _clock, initialSections).EnsureValue();
 
-        SectionUpdateInfo[] updatedSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        SectionUpdateInfo[] updatedSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         // Act
         var result = menu.SyncMenu(menuName!, updatedSections, _clock, _idProvider);
@@ -330,32 +328,32 @@ public class MenuTests
     public void Sync_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        var initialMenuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] initialSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var initialMenuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] initialSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         var menu = MenuEntity.Create(_cafeId, initialMenuName, _idProvider, _clock, initialSections).EnsureValue();
 
-        SectionUpdateInfo[] updatedSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        SectionUpdateInfo[] updatedSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            menu.SyncMenu(_faker.Company.CatchPhrase(), updatedSections, null!, _idProvider));
+            menu.SyncMenu(MenuDataGenerator.GenerateValidMenuName(), updatedSections, null!, _idProvider));
     }
 
     [Fact]
     public void Sync_ThrowsArgumentNullException_WhenIdProviderIsNull()
     {
         // Arrange
-        var initialMenuName = _faker.Company.CatchPhrase();
-        SectionUpdateInfo[] initialSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        var initialMenuName = MenuDataGenerator.GenerateValidMenuName();
+        SectionUpdateInfo[] initialSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         var menu = MenuEntity.Create(_cafeId, initialMenuName, _idProvider, _clock, initialSections).EnsureValue();
 
-        SectionUpdateInfo[] updatedSections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
+        SectionUpdateInfo[] updatedSections = [MenuDataGenerator.GenerateSectionInfo()];
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            menu.SyncMenu(_faker.Company.CatchPhrase(), updatedSections, _clock, null!));
+            menu.SyncMenu(MenuDataGenerator.GenerateValidMenuName(), updatedSections, _clock, null!));
     }
 
     [Fact]
@@ -363,7 +361,7 @@ public class MenuTests
     {
         // Arrange
         SectionUpdateInfo[] sections = [];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act
         var result = menu.Publish(_clock);
@@ -382,8 +380,8 @@ public class MenuTests
     public void Publish_ReturnsValidationError_WhenItemsEmpty()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo(itemCount: 0)];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo(itemCount: 0)];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act
         var result = menu.Publish(_clock);
@@ -405,8 +403,8 @@ public class MenuTests
     public void Publish_ReturnsValidationError_WhenInvalidState(MenuState targetState, string expectedErrorCode)
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         ChangeState(menu, targetState);
 
         // Act
@@ -423,8 +421,8 @@ public class MenuTests
     public void Publish_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -438,8 +436,8 @@ public class MenuTests
     public void Activate_ReturnsError_WhenMenuStateInvalid(MenuState targetState)
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         ChangeState(menu, targetState);
 
         // Act
@@ -456,8 +454,8 @@ public class MenuTests
     public void Activate_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -471,8 +469,8 @@ public class MenuTests
     public void Deactivate_ReturnsValidationError_WhenMenuIsNotActive(MenuState targetState)
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         ChangeState(menu, targetState);
 
         // Act
@@ -489,8 +487,8 @@ public class MenuTests
     public void Deactivate_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -501,8 +499,8 @@ public class MenuTests
     public void SoftDelete_ReturnsConflict_WhenMenuIsActive()
     {
         // Arrange
-        var sections = new[] { UpdateInfoDataGenerator.GenerateUpdateSectionInfo() };
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        var sections = new[] { MenuDataGenerator.GenerateSectionInfo() };
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
         menu.Publish(_clock);
         menu.Activate(_clock);
 
@@ -520,8 +518,8 @@ public class MenuTests
     public void SoftDelete_ThrowsArgumentNullException_WhenClockIsNull()
     {
         // Arrange
-        SectionUpdateInfo[] sections = [UpdateInfoDataGenerator.GenerateUpdateSectionInfo()];
-        var menu = MenuEntity.Create(_cafeId, _faker.Company.CatchPhrase(), _idProvider, _clock, sections).EnsureValue();
+        SectionUpdateInfo[] sections = [MenuDataGenerator.GenerateSectionInfo()];
+        var menu = MenuEntity.Create(_cafeId, MenuDataGenerator.GenerateValidMenuName(), _idProvider, _clock, sections).EnsureValue();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
