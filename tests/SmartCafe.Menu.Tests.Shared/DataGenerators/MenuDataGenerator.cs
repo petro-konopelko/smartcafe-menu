@@ -2,10 +2,27 @@ using Bogus;
 using SmartCafe.Menu.Domain.Enums;
 using SmartCafe.Menu.Domain.Models;
 
-namespace SmartCafe.Menu.UnitTests.DataGenerators;
+namespace SmartCafe.Menu.Tests.Shared.DataGenerators;
 
-public class UpdateInfoDataGenerator
+public class MenuDataGenerator
 {
+    private static readonly Faker _faker = new();
+
+    public static string GenerateValidMenuName() =>
+        _faker.Commerce.Department() + " Menu";
+
+    public static string GenerateValidSectionName() =>
+        _faker.Commerce.Department();
+
+    public static string GenerateValidItemName() =>
+        _faker.Commerce.ProductName();
+
+    public static string GenerateValidIngredientName() =>
+        _faker.Commerce.ProductName();
+
+    public static string GenerateValidProductDescription() =>
+        _faker.Commerce.ProductDescription();
+
     private static readonly Faker<IngredientItemUpdate> ingredientFaker = new Faker<IngredientItemUpdate>()
         .CustomInstantiator(f => new IngredientItemUpdate(
             f.Commerce.ProductName(),
@@ -56,7 +73,7 @@ public class UpdateInfoDataGenerator
                 items);
         });
 
-    public static SectionUpdateInfo GenerateUpdateSectionInfo(Guid? sectionId = null, int itemCount = 1, params Guid?[] itemIds)
+    public static SectionUpdateInfo GenerateSectionInfo(Guid? sectionId = null, int itemCount = 1, params Guid?[] itemIds)
     {
         var section = sectionFaker(sectionId, itemCount, itemIds).Generate();
         return section;

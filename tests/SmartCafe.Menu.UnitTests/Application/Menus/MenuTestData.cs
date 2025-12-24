@@ -12,8 +12,8 @@ using SmartCafe.Menu.Domain.Enums;
 using SmartCafe.Menu.Domain.Models;
 using SmartCafe.Menu.Shared.Models;
 using SmartCafe.Menu.Shared.Providers.Abstractions;
-using SmartCafe.Menu.UnitTests.DataGenerators;
-using SmartCafe.Menu.UnitTests.Fakes;
+using SmartCafe.Menu.Tests.Shared.DataGenerators;
+using SmartCafe.Menu.Tests.Shared.Mocks;
 using MenuEntity = SmartCafe.Menu.Domain.Entities.Menu;
 
 namespace SmartCafe.Menu.UnitTests.Application.Menus;
@@ -96,7 +96,7 @@ public static class MenuTestData
         var faker = CreateFaker();
         var menuName = name ?? faker.Company.CatchPhrase();
 
-        sections ??= [UpdateInfoDataGenerator.GenerateUpdateSectionInfo(itemCount: 1)];
+        sections ??= [MenuDataGenerator.GenerateSectionInfo(itemCount: 1)];
 
         return MenuEntity.Create(cafeId, menuName, idProvider, clock, sections).EnsureValue();
     }

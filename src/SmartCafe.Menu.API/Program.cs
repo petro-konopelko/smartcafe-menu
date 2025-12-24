@@ -8,10 +8,21 @@ using SmartCafe.Menu.Infrastructure.DependencyInjection;
 using SmartCafe.Menu.Shared.Providers;
 using SmartCafe.Menu.Shared.Providers.Abstractions;
 
-Log.Logger = new LoggerConfiguration()
+var testingEnv = "Testing";
+
+// https://github.com/serilog/serilog-aspnetcore/issues/289
+// There is a problem with using Serilog's "CreateBootstrapLogger" when trying to initialize a web host.
+// Multiple hosts may be created in parallel during integration tests, which can lead to conflicts when initializing and disposing the shared logger instance.
+var isTesting = args.Any(arg => arg.Contains($"environment={testingEnv}", StringComparison.OrdinalIgnoreCase))
+    || Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == testingEnv;
+
+var loggerConfiguration = new LoggerConfiguration()
     .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
+    .WriteTo.Console();
+
+Log.Logger = isTesting
+    ? loggerConfiguration.CreateLogger()
+    : loggerConfiguration.CreateBootstrapLogger();
 
 try
 {
@@ -24,8 +35,11 @@ try
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services));
 
+    var isUpperEnvironment = builder.Environment.IsProduction()
+        || builder.Environment.IsStaging();
+
     // Configure secrets (Key Vault in production, User Secrets in dev)
-    if (!builder.Environment.IsDevelopment())
+    if (isUpperEnvironment)
     {
         var keyVaultUri = builder.Configuration["KeyVault:Uri"];
         if (!string.IsNullOrEmpty(keyVaultUri))
@@ -55,7 +69,7 @@ try
     // Configure middleware pipeline
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-    if (!app.Environment.IsDevelopment())
+    if (isUpperEnvironment)
     {
         app.UseExceptionHandler("/Error");
         app.UseHsts();
@@ -63,7 +77,7 @@ try
 
     app.UseHttpsRedirection();
 
-    if (app.Environment.IsDevelopment())
+    if (!isUpperEnvironment)
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
