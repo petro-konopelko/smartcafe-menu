@@ -54,4 +54,19 @@ public class ActivateMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(fi
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
+
+    [Fact]
+    public async Task ActivateMenu_ShouldReturn400_WhenRequestIsInvalid()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        await Factory.SeedCafeAsync(cafeId, ct: ct);
+
+        // Act
+        var response = await Client.PostAsync($"/api/cafes/{cafeId}/menus/{Guid.Empty}/activate", content: null, ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
