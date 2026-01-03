@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMediator, Mediator>();
 
         // Register pipeline behaviors
+        // ValidationBehavior handles both Result and Result<T> as TResponse
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         // Auto-register all handlers using Scrutor
