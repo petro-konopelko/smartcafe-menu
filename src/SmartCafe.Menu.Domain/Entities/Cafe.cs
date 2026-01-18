@@ -18,6 +18,11 @@ public class Cafe : Entity
     {
         ArgumentNullException.ThrowIfNull(clock);
 
+        return Create(cafeId, name, clock.UtcNow);
+    }
+
+    public static Result<Cafe> Create(Guid cafeId, string name, DateTime utcNow)
+    {
         if (cafeId.Equals(Guid.Empty))
         {
             throw new ArgumentException("ID cannot be empty", nameof(cafeId));
@@ -32,7 +37,7 @@ public class Cafe : Entity
         {
             Id = cafeId,
             Name = name,
-            CreatedAt = clock.UtcNow
+            CreatedAt = utcNow
         };
 
         return Result<Cafe>.Success(cafe);
