@@ -1,9 +1,11 @@
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
 using SmartCafe.Menu.API.Extensions;
 using SmartCafe.Menu.API.Middleware;
 using SmartCafe.Menu.Application.DependencyInjection;
+using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 using SmartCafe.Menu.Infrastructure.DependencyInjection;
 using SmartCafe.Menu.Shared.Providers;
 using SmartCafe.Menu.Shared.Providers.Abstractions;
@@ -42,12 +44,13 @@ try
     if (isUpperEnvironment)
     {
         var keyVaultUri = builder.Configuration["KeyVault:Uri"];
-        if (!string.IsNullOrEmpty(keyVaultUri))
-        {
-            builder.Configuration.AddAzureKeyVault(
-                new Uri(keyVaultUri),
-                new DefaultAzureCredential());
-        }
+
+        if (string.IsNullOrEmpty(keyVaultUri))
+            throw new InvalidOperationException("Key Vault URI is not configured.");
+
+        builder.Configuration.AddAzureKeyVault(
+            new Uri(keyVaultUri),
+            new DefaultAzureCredential());
     }
 
     // Domain services
@@ -84,6 +87,14 @@ try
     }
 
     app.MapRoutes();
+
+    // Apply database migrations at startup
+    // TODO: Consider moving to a more robust migration strategy for production scenarios
+    // e.g., manual migrations via CI/CD pipeline or a dedicated migrator service
+    // Consider database is vnet restricted
+    using var scope = app.Services.CreateScope();
+    using var dbContext = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+    await dbContext.Database.MigrateAsync();
 
     await app.RunAsync();
 }
