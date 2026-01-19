@@ -20,7 +20,8 @@ var isTesting = args.Any(arg => arg.Contains($"environment={testingEnv}", String
 
 var loggerConfiguration = new LoggerConfiguration()
     .Enrich.FromLogContext()
-    .WriteTo.Console();
+    .WriteTo.Console()
+    .WriteTo.File("logs/menu-api-.log", rollingInterval: RollingInterval.Day);
 
 Log.Logger = isTesting
     ? loggerConfiguration.CreateLogger()
@@ -48,9 +49,13 @@ try
         if (string.IsNullOrEmpty(keyVaultUri))
             throw new InvalidOperationException("Key Vault URI is not configured.");
 
+        Log.Information("Configuring Key Vault integration with URI: {KeyVaultUri}", keyVaultUri);
+
         builder.Configuration.AddAzureKeyVault(
             new Uri(keyVaultUri),
-            new DefaultAzureCredential());
+            new ManagedIdentityCredential());
+
+        Log.Information("Key Vault integration configured successfully.");
     }
 
     // Domain services
