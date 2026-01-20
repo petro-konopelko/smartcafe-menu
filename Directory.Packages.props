@@ -10,7 +10,7 @@
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.1.0" />
     <!-- Azure -->
     <PackageVersion Include="Azure.Identity" Version="1.17.1" />
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.26.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.27.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
     <!-- Entity Framework Core -->
