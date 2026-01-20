@@ -54,7 +54,7 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
     public async Task DeleteMenuImagesAsync(Guid cafeId, Guid menuId, CancellationToken cancellationToken = default)
     {
         var prefix = $"{cafeId}/{menuId}/";
-        await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
+        await foreach (var blobItem in _containerClient.GetBlobsAsync(new GetBlobsOptions() { Prefix = prefix }, cancellationToken: cancellationToken))
         {
             await _containerClient.DeleteBlobIfExistsAsync(blobItem.Name, cancellationToken: cancellationToken);
         }
@@ -63,7 +63,7 @@ public class AzureBlobStorageService(BlobServiceClient blobServiceClient, string
     public async Task DeleteItemImagesAsync(Guid cafeId, Guid menuId, Guid itemId, CancellationToken cancellationToken = default)
     {
         var prefix = $"{cafeId}/{menuId}/{itemId}/";
-        await foreach (var blobItem in _containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
+        await foreach (var blobItem in _containerClient.GetBlobsAsync(new GetBlobsOptions() { Prefix = prefix }, cancellationToken: cancellationToken))
         {
             await _containerClient.DeleteBlobIfExistsAsync(blobItem.Name, cancellationToken: cancellationToken);
         }
