@@ -12,8 +12,7 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
     public DatabaseFixture()
     {
-        _dbContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:16")
+        _dbContainer = new PostgreSqlBuilder("postgres:16")
             .WithDatabase("MenusTestDb")
             .Build();
     }
