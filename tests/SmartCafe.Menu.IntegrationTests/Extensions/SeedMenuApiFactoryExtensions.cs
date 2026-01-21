@@ -4,6 +4,7 @@ using SmartCafe.Menu.Infrastructure.Data.PostgreSQL;
 using SmartCafe.Menu.IntegrationTests.DataSeeders;
 using SmartCafe.Menu.IntegrationTests.Fixtures;
 using SmartCafe.Menu.Shared.Providers;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 using SmartCafe.Menu.Tests.Shared.DataGenerators;
 using MenuEntity = SmartCafe.Menu.Domain.Entities.Menu;
 
@@ -17,13 +18,34 @@ internal static class SeedMenuApiFactoryExtensions
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(factory);
-        var cafe = CafeDataGenerator.GenerateValidCafe(cafeId);
 
         using var scope = factory.Services.CreateScope();
+        var dateTimeProvider = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+        var cafe = CafeDataGenerator.GenerateValidCafe(dateTimeProvider, cafeId);
         var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
 
         await DbSeeder.SeedCafeAsync(db, cafe, ct);
         await db.SaveChangesAsync(ct);
+    }
+
+    public static async Task<Domain.Entities.Cafe> SeedCafeAsync(
+        this MenuApiTestFactory factory,
+        string name,
+        string? contactInfo,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        using var scope = factory.Services.CreateScope();
+        var dateTimeProvider = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+        var cafeId = Guid.CreateVersion7();
+        var cafe = Domain.Entities.Cafe.Create(cafeId, name, dateTimeProvider, contactInfo).EnsureValue();
+        var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+
+        await DbSeeder.SeedCafeAsync(db, cafe, ct);
+        await db.SaveChangesAsync(ct);
+
+        return cafe;
     }
 
     public static async Task<MenuEntity> SeedMenuAsync(
@@ -37,10 +59,10 @@ internal static class SeedMenuApiFactoryExtensions
     {
         ArgumentNullException.ThrowIfNull(factory);
 
-        var cafe = CafeDataGenerator.GenerateValidCafe(cafeId);
-        var menu = GenerateMenu(cafeId, state, name, sectionCount, itemsPerSection);
-
         using var scope = factory.Services.CreateScope();
+        var dateTimeProvider = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+        var cafe = CafeDataGenerator.GenerateValidCafe(dateTimeProvider, cafeId);
+        var menu = GenerateMenu(cafeId, state, name, sectionCount, itemsPerSection);
         var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
 
         await DbSeeder.SeedCafeAsync(db, cafe, ct);
@@ -79,5 +101,24 @@ internal static class SeedMenuApiFactoryExtensions
         }
 
         return menu;
+    }
+
+    public static async Task DeleteCafeAsync(
+        this MenuApiTestFactory factory,
+        Guid cafeId,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+        var dateTimeProvider = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+
+        var cafe = await db.Cafes.FindAsync([cafeId], ct);
+        if (cafe is not null)
+        {
+            cafe.SoftDelete(dateTimeProvider);
+            await db.SaveChangesAsync(ct);
+        }
     }
 }

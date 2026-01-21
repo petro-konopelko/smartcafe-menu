@@ -13,6 +13,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class DeleteMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -29,8 +30,9 @@ public class DeleteMenuHandlerTests
         var menu = MenuTestData.CreatePublishedMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new DeleteMenuHandler(menuRepository, imageStorageService, unitOfWork, eventDispatcher, _clock);
+        var handler = new DeleteMenuHandler(menuRepository, _cafeRepository, imageStorageService, unitOfWork, eventDispatcher, _clock);
         var command = new DeleteMenuCommand(cafeId, menu.Id);
 
         // Act
@@ -58,8 +60,9 @@ public class DeleteMenuHandlerTests
         var cafeId = Guid.NewGuid();
         var menuId = Guid.NewGuid();
         menuRepository.GetByIdAsync(menuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new DeleteMenuHandler(menuRepository, imageStorageService, unitOfWork, eventDispatcher, _clock);
+        var handler = new DeleteMenuHandler(menuRepository, _cafeRepository, imageStorageService, unitOfWork, eventDispatcher, _clock);
         var command = new DeleteMenuCommand(cafeId, menuId);
 
         // Act

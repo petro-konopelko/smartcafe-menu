@@ -27,15 +27,15 @@ public class CreateMenuHandlerTests
         var eventDispatcher = Substitute.For<IDomainEventDispatcher>();
 
         var cafeId = Guid.NewGuid();
-        cafeRepository.ExistsAsync(cafeId, Arg.Any<CancellationToken>()).Returns(true);
+        cafeRepository.ExistsActiveAsync(cafeId, Arg.Any<CancellationToken>()).Returns(true);
 
         var expectedMenuId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         var createdAt = new DateTime(2025, 12, 21, 12, 0, 0, DateTimeKind.Utc);
         _clock.SetUtcNow(createdAt);
 
         var handler = new CreateMenuHandler(
-            cafeRepository,
             menuRepository,
+            cafeRepository,
             unitOfWork,
             eventDispatcher,
             _clock,
@@ -69,11 +69,11 @@ public class CreateMenuHandlerTests
         var eventDispatcher = Substitute.For<IDomainEventDispatcher>();
 
         var cafeId = Guid.NewGuid();
-        cafeRepository.ExistsAsync(cafeId, Arg.Any<CancellationToken>()).Returns(false);
+        cafeRepository.ExistsActiveAsync(cafeId, Arg.Any<CancellationToken>()).Returns(false);
 
         var handler = new CreateMenuHandler(
-            cafeRepository,
             menuRepository,
+            cafeRepository,
             unitOfWork,
             eventDispatcher,
             _clock,
@@ -107,11 +107,11 @@ public class CreateMenuHandlerTests
         var eventDispatcher = Substitute.For<IDomainEventDispatcher>();
 
         var cafeId = Guid.NewGuid();
-        cafeRepository.ExistsAsync(cafeId, Arg.Any<CancellationToken>()).Returns(true);
+        cafeRepository.ExistsActiveAsync(cafeId, Arg.Any<CancellationToken>()).Returns(true);
 
         var handler = new CreateMenuHandler(
-            cafeRepository,
             menuRepository,
+            cafeRepository,
             unitOfWork,
             eventDispatcher,
             _clock,

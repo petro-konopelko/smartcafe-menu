@@ -15,6 +15,11 @@ public static class ValidationMessages
     public const string SectionIdMustBeNullForCreate = "Section ID must be null when creating a new menu";
     public const string ItemIdMustBeNullForCreate = "Item ID must be null when creating a new menu";
 
+    // Cafe Validation
+    public const string CafeNameRequired = "Cafe name is required";
+    public const string CafeNameTooLong = "Cafe name must not exceed 200 characters";
+    public const string CafeContactInfoTooLong = "Contact info must not exceed 500 characters";
+
     // Menu Validation
     public const string MenuNameRequired = "Menu name is required";
     public const string MenuNameMaxLength = "Menu name must not exceed 200 characters";

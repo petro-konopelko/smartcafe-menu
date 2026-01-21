@@ -33,13 +33,13 @@ public class MenuRepository(MenuDbContext context) : IMenuRepository
 
     public async Task<Domain.Entities.Menu> CreateAsync(Domain.Entities.Menu menu, CancellationToken cancellationToken = default)
     {
-        context.Menus.Add(menu);
+        await context.Menus.AddAsync(menu, cancellationToken);
         return menu;
     }
 
-    public async Task UpdateAsync(Domain.Entities.Menu menu, CancellationToken cancellationToken = default)
+    public Task UpdateAsync(Domain.Entities.Menu menu, CancellationToken cancellationToken = default)
     {
         context.Menus.Update(menu);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

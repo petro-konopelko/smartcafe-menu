@@ -11,6 +11,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class GetActiveMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -27,8 +28,9 @@ public class GetActiveMenuHandlerTests
         var menu = MenuTestData.CreateActiveMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
         menuRepository.GetActiveMenuAsync(cafeId, Arg.Any<CancellationToken>()).Returns(menu);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new GetActiveMenuHandler(menuRepository, imageStorageService);
+        var handler = new GetActiveMenuHandler(menuRepository, _cafeRepository, imageStorageService);
         var query = MenuTestData.CreateGetActiveMenuQuery(cafeId);
 
         // Act
@@ -53,8 +55,9 @@ public class GetActiveMenuHandlerTests
 
         var cafeId = Guid.NewGuid();
         menuRepository.GetActiveMenuAsync(cafeId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new GetActiveMenuHandler(menuRepository, imageStorageService);
+        var handler = new GetActiveMenuHandler(menuRepository, _cafeRepository, imageStorageService);
         var query = MenuTestData.CreateGetActiveMenuQuery(cafeId);
 
         // Act

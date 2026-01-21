@@ -10,6 +10,7 @@ namespace SmartCafe.Menu.Application.Features.Menus.PublishMenu;
 
 public class PublishMenuHandler(
     IMenuRepository menuRepository,
+    ICafeRepository cafeRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<PublishMenuCommand, Result<PublishMenuResponse>>
@@ -19,6 +20,15 @@ public class PublishMenuHandler(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Check cafe exists (not deleted)
+        var cafeExists = await cafeRepository.ExistsActiveAsync(request.CafeId, cancellationToken);
+        if (!cafeExists)
+        {
+            return Result<PublishMenuResponse>.Failure(Error.NotFound(
+                $"Cafe with ID {request.CafeId} not found",
+                CafeErrorCodes.CafeNotFound));
+        }
 
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 

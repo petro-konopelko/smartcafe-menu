@@ -31,7 +31,7 @@ public class ListMenusEndpointTests(DatabaseFixture fixture) : ApiTestBase(fixtu
     }
 
     [Fact]
-    public async Task ListMenus_ShouldReturn200AndEmpty_WhenCafeDoesNotExist()
+    public async Task ListMenus_ShouldReturn404_WhenCafeDoesNotExist()
     {
         // Arrange
         var ct = Ct;
@@ -39,11 +39,26 @@ public class ListMenusEndpointTests(DatabaseFixture fixture) : ApiTestBase(fixtu
 
         // Act
         var response = await Client.GetAsync($"/api/cafes/{cafeId}/menus", ct);
-        var body = await response.Content.ReadFromJsonAsync<ListMenusResponse>(cancellationToken: ct);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(body);
-        Assert.Empty(body.Menus);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListMenus_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        await Factory.SeedCafeAsync(cafeId, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        // Act
+        var response = await Client.GetAsync($"/api/cafes/{cafeId}/menus", ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

@@ -9,6 +9,7 @@ namespace SmartCafe.Menu.Application.Features.Menus.DeleteMenu;
 
 public class DeleteMenuHandler(
     IMenuRepository menuRepository,
+    ICafeRepository cafeRepository,
     IImageStorageService imageStorageService,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
@@ -19,6 +20,15 @@ public class DeleteMenuHandler(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Check cafe exists (not deleted)
+        var cafeExists = await cafeRepository.ExistsActiveAsync(request.CafeId, cancellationToken);
+        if (!cafeExists)
+        {
+            return Result.Failure(Error.NotFound(
+                $"Cafe with ID {request.CafeId} not found",
+                CafeErrorCodes.CafeNotFound));
+        }
 
         var menu = await menuRepository.GetByIdAsync(request.MenuId, cancellationToken);
 

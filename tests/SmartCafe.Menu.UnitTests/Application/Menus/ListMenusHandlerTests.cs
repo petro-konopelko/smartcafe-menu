@@ -9,6 +9,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class ListMenusHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -24,8 +25,9 @@ public class ListMenusHandlerTests
         var menu2 = MenuTestData.CreateNewMenu(cafeId, new SequenceGuidIdProvider(), _clock, name: "Menu 2");
 
         menuRepository.GetAllByCafeIdAsync(cafeId, Arg.Any<CancellationToken>()).Returns(new[] { menu1, menu2 });
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new ListMenusHandler(menuRepository);
+        var handler = new ListMenusHandler(menuRepository, _cafeRepository);
         var query = new ListMenusQuery(cafeId);
 
         // Act

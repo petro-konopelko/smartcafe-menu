@@ -64,7 +64,27 @@ public class CreateMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(fixt
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    public static CreateMenuRequest CreateValidCreateMenuRequest(string? name = null)
+    [Fact]
+    public async Task CreateMenu_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        await Factory.SeedCafeAsync(cafeId, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        var request = CreateValidCreateMenuRequest();
+
+        // Act
+        var response = await Client.PostAsJsonAsync($"/api/cafes/{cafeId}/menus", request, ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    private static CreateMenuRequest CreateValidCreateMenuRequest(string? name = null)
     {
         return new CreateMenuRequest(
             Name: name ?? "Menu",

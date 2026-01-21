@@ -14,6 +14,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class ActivateMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -31,8 +32,9 @@ public class ActivateMenuHandlerTests
 
         menuRepository.GetByIdAsync(targetMenu.Id, Arg.Any<CancellationToken>()).Returns(targetMenu);
         menuRepository.GetActiveMenuAsync(cafeId, Arg.Any<CancellationToken>()).Returns(currentActiveMenu);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new ActivateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock);
+        var handler = new ActivateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock);
         var command = new ActivateMenuCommand(cafeId, targetMenu.Id);
 
         // Act
@@ -67,8 +69,9 @@ public class ActivateMenuHandlerTests
 
         menuRepository.GetByIdAsync(targetMenu.Id, Arg.Any<CancellationToken>()).Returns(targetMenu);
         menuRepository.GetActiveMenuAsync(cafeId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new ActivateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock);
+        var handler = new ActivateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock);
         var command = new ActivateMenuCommand(cafeId, targetMenu.Id);
 
         // Act
@@ -98,8 +101,9 @@ public class ActivateMenuHandlerTests
         var menuId = Guid.NewGuid();
 
         menuRepository.GetByIdAsync(menuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new ActivateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock);
+        var handler = new ActivateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock);
         var command = new ActivateMenuCommand(cafeId, menuId);
 
         // Act

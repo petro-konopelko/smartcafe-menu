@@ -11,8 +11,8 @@ using MenuEntity = SmartCafe.Menu.Domain.Entities.Menu;
 namespace SmartCafe.Menu.Application.Features.Menus.CreateMenu;
 
 public class CreateMenuHandler(
-    ICafeRepository cafeRepository,
     IMenuRepository menuRepository,
+    ICafeRepository cafeRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider,
@@ -25,7 +25,7 @@ public class CreateMenuHandler(
         ArgumentNullException.ThrowIfNull(request);
 
         // Check cafe exists
-        var cafeExists = await cafeRepository.ExistsAsync(request.CafeId, cancellationToken);
+        var cafeExists = await cafeRepository.ExistsActiveAsync(request.CafeId, cancellationToken);
         if (!cafeExists)
         {
             return Result<CreateMenuResponse>.Failure(Error.NotFound(
