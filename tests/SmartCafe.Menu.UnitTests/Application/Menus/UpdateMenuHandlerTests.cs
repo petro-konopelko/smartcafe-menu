@@ -12,6 +12,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class UpdateMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
     private readonly SequenceGuidIdProvider _idProvider = new();
 
@@ -27,9 +28,10 @@ public class UpdateMenuHandlerTests
         var cafeId = Guid.NewGuid();
         var menu = MenuTestData.CreateNewMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
 
-        var handler = new UpdateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
+        var handler = new UpdateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
         var command = MenuTestData.CreateUpdateMenuCommandFromMenu(menu, cafeId, newName: "Updated name");
 
         // Act
@@ -54,8 +56,9 @@ public class UpdateMenuHandlerTests
         var menuId = Guid.NewGuid();
 
         menuRepository.GetByIdAsync(menuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new UpdateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
+        var handler = new UpdateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
         var command = MenuTestData.CreateValidUpdateMenuCommand(cafeId: cafeId, menuId: menuId);
 
         // Act
@@ -84,9 +87,10 @@ public class UpdateMenuHandlerTests
 
         var menu = MenuTestData.CreateNewMenu(otherCafeId, new SequenceGuidIdProvider(), _clock);
 
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
 
-        var handler = new UpdateMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
+        var handler = new UpdateMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock, _idProvider);
         var command = MenuTestData.CreateValidUpdateMenuCommand(cafeId: expectedCafeId, menuId: menu.Id);
 
         // Act

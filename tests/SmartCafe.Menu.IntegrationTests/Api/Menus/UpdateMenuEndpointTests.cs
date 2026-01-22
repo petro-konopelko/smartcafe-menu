@@ -58,6 +58,28 @@ public class UpdateMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(fixt
         Assert.Equal("Updated Menu", getAfter.Name);
     }
 
+    [Fact]
+    public async Task UpdateMenu_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        await Factory.SeedCafeAsync(cafeId, ct: ct);
+
+        var menu = await Factory.SeedMenuAsync(cafeId, MenuState.New, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        var updateRequest = CreateValidUpdateMenuRequest(menu);
+
+        // Act
+        var response = await Client.PutAsJsonAsync($"/api/cafes/{cafeId}/menus/{menu.Id}", updateRequest, ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private static UpdateMenuRequest CreateValidUpdateMenuRequest(MenuEntity menu, string? name = null)
     {
         var section = menu.Sections.First();

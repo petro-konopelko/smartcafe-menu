@@ -17,7 +17,7 @@ public class SectionConfiguration : IEntityTypeConfiguration<Section>
 
         builder.Property(e => e.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(Section.MaxNameLength);
 
         builder.HasOne(e => e.Menu)
             .WithMany(e => e.Sections)

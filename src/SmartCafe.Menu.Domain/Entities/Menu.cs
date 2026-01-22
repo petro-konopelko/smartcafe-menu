@@ -11,6 +11,8 @@ namespace SmartCafe.Menu.Domain.Entities;
 
 public class Menu : Entity
 {
+    public const int MaxNameLength = 200;
+
     private readonly List<Section> _sections = [];
 
     public Guid CafeId { get; init; }

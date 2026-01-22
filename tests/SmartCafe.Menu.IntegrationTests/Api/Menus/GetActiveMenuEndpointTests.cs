@@ -44,4 +44,22 @@ public class GetActiveMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(f
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task GetActiveMenu_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        await Factory.SeedCafeAsync(cafeId, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        // Act
+        var response = await Client.GetAsync($"/api/cafes/{cafeId}/menus/active", ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

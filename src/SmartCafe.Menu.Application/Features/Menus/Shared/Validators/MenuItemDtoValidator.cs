@@ -13,10 +13,10 @@ public class MenuItemDtoValidator : AbstractValidator<MenuItemDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(ValidationMessages.ItemNameRequired)
-            .MaximumLength(200).WithMessage(ValidationMessages.ItemNameMaxLength);
+            .MaximumLength(Domain.Entities.MenuItem.MaxNameLength).WithMessage(ValidationMessages.ItemNameMaxLength);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage(ValidationMessages.ItemDescriptionMaxLength);
+            .MaximumLength(Domain.Entities.MenuItem.MaxDescriptionLength).WithMessage(ValidationMessages.ItemDescriptionMaxLength);
 
         RuleFor(x => x.Price)
             .NotNull().WithMessage(ValidationMessages.PriceRequired)

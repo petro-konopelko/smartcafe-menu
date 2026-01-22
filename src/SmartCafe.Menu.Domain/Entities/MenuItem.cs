@@ -8,6 +8,9 @@ namespace SmartCafe.Menu.Domain.Entities;
 
 public class MenuItem : Entity
 {
+    public const int MaxNameLength = 200;
+    public const int MaxDescriptionLength = 500;
+
     public Guid SectionId { get; }
     public Section Section { get; init; } = null!;
     public string Name { get; private set; } = string.Empty;

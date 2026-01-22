@@ -1,3 +1,4 @@
+using SmartCafe.Menu.API.Endpoints.Cafes;
 using SmartCafe.Menu.API.Endpoints.Images;
 using SmartCafe.Menu.API.Endpoints.Menus;
 
@@ -12,6 +13,9 @@ public static class WebApplicationExtensions
             // Map API endpoints
             var api = app.MapGroup("/api");
 
+            // Cafe endpoints
+            app.MapCafeRoutes(api);
+
             // Menu endpoints
             app.MapMenuRoutes(api);
 
@@ -19,6 +23,18 @@ public static class WebApplicationExtensions
             app.MapImageEndpoints(api);
 
             return app;
+        }
+
+        private void MapCafeRoutes(RouteGroupBuilder routeGroupBuilder)
+        {
+            // Cafe endpoints
+            var cafes = routeGroupBuilder.MapGroup("/cafes");
+
+            // CRUD operations
+            cafes.MapListCafes();          // GET /api/cafes
+            cafes.MapCreateCafe();         // POST /api/cafes
+            cafes.MapGetCafe();            // GET /api/cafes/{cafeId}
+            cafes.MapDeleteCafe();         // DELETE /api/cafes/{cafeId}
         }
 
         private void MapMenuRoutes(RouteGroupBuilder routeGroupBuilder)

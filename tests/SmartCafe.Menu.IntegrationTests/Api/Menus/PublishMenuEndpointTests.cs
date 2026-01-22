@@ -47,4 +47,22 @@ public class PublishMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(fix
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
     }
+
+    [Fact]
+    public async Task PublishMenu_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        var menu = await Factory.SeedMenuAsync(cafeId, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        // Act
+        var response = await Client.PostAsync($"/api/cafes/{cafeId}/menus/{menu.Id}/publish", null, ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

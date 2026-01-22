@@ -1,6 +1,6 @@
 using Bogus;
 using SmartCafe.Menu.Domain.Entities;
-using SmartCafe.Menu.Tests.Shared.Mocks;
+using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 namespace SmartCafe.Menu.Tests.Shared.DataGenerators;
 
@@ -11,12 +11,11 @@ public static class CafeDataGenerator
     public static string GenerateCafeName()
         => _faker.Company.CompanyName();
 
-    public static Cafe GenerateValidCafe(Guid? cafeId = null)
+    public static Cafe GenerateValidCafe(IDateTimeProvider dateTimeProvider, Guid? cafeId = null)
     {
+        ArgumentNullException.ThrowIfNull(dateTimeProvider);
         var id = cafeId ?? Guid.NewGuid();
         var cafeName = GenerateCafeName();
-        var dateTimeProvider = new FakeDateTimeProvider();
-        dateTimeProvider.SetUtcNow(DateGenerator.GenerateRecentUtcDateTime());
 
         var cafeResult = Cafe.Create(id, cafeName, dateTimeProvider);
         return cafeResult.EnsureValue();

@@ -17,7 +17,7 @@ public class MenuConfiguration : IEntityTypeConfiguration<Domain.Entities.Menu>
 
         builder.Property(e => e.Name)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(Domain.Entities.Menu.MaxNameLength);
 
         builder.Property(e => e.State)
             .HasConversion<int>()

@@ -66,4 +66,24 @@ public class CloneMenuEndpointTests(DatabaseFixture fixture) : ApiTestBase(fixtu
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task CloneMenu_ShouldReturn404_WhenCafeIsDeleted()
+    {
+        // Arrange
+        var ct = Ct;
+        var cafeId = Guid.NewGuid();
+        var menu = await Factory.SeedMenuAsync(cafeId, ct: ct);
+
+        // Delete cafe
+        await Factory.DeleteCafeAsync(cafeId, ct);
+
+        var cloneRequest = new CloneMenuRequest(NewName: "Cloned Menu");
+
+        // Act
+        var response = await Client.PostAsJsonAsync($"/api/cafes/{cafeId}/menus/{menu.Id}/clone", cloneRequest, ct);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

@@ -13,6 +13,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class PublishMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -28,8 +29,9 @@ public class PublishMenuHandlerTests
         var menu = MenuTestData.CreateNewMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new PublishMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock);
+        var handler = new PublishMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock);
         var command = new PublishMenuCommand(cafeId, menu.Id);
 
         // Act
@@ -61,8 +63,9 @@ public class PublishMenuHandlerTests
         var cafeId = Guid.NewGuid();
         var menuId = Guid.NewGuid();
         menuRepository.GetByIdAsync(menuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new PublishMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock);
+        var handler = new PublishMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock);
         var command = new PublishMenuCommand(cafeId, menuId);
 
         // Act

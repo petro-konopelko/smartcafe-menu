@@ -10,6 +10,6 @@ public class IngredientValidator : AbstractValidator<IngredientDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(ValidationMessages.IngredientNameRequired)
-            .MaximumLength(100).WithMessage(ValidationMessages.IngredientNameMaxLength);
+            .MaximumLength(Domain.ValueObjects.Ingredient.MaxNameLength).WithMessage(ValidationMessages.IngredientNameMaxLength);
     }
 }

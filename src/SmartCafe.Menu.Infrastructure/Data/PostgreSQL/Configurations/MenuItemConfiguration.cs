@@ -19,10 +19,10 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
 
         builder.Property(e => e.Name)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(MenuItem.MaxNameLength);
 
         builder.Property(e => e.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(MenuItem.MaxDescriptionLength);
 
         // Map Price value object to separate columns
         builder.OwnsOne(e => e.Price, price =>

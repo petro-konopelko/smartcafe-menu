@@ -11,6 +11,7 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class GetMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
 
     [Fact]
@@ -26,9 +27,10 @@ public class GetMenuHandlerTests
         var cafeId = Guid.NewGuid();
         var menu = MenuTestData.CreateNewMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
 
-        var handler = new GetMenuHandler(menuRepository, imageStorageService);
+        var handler = new GetMenuHandler(menuRepository, _cafeRepository, imageStorageService);
         var query = MenuTestData.CreateGetMenuQuery(cafeId: cafeId, menuId: menu.Id);
 
         // Act
@@ -57,9 +59,10 @@ public class GetMenuHandlerTests
 
         var menu = MenuTestData.CreateNewMenu(otherCafeId, new SequenceGuidIdProvider(), _clock);
 
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
         menuRepository.GetByIdAsync(menu.Id, Arg.Any<CancellationToken>()).Returns(menu);
 
-        var handler = new GetMenuHandler(menuRepository, imageStorageService);
+        var handler = new GetMenuHandler(menuRepository, _cafeRepository, imageStorageService);
         var query = MenuTestData.CreateGetMenuQuery(cafeId: expectedCafeId, menuId: menu.Id);
 
         // Act
@@ -83,8 +86,9 @@ public class GetMenuHandlerTests
         var menuId = Guid.NewGuid();
 
         menuRepository.GetByIdAsync(menuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new GetMenuHandler(menuRepository, imageStorageService);
+        var handler = new GetMenuHandler(menuRepository, _cafeRepository, imageStorageService);
         var query = MenuTestData.CreateGetMenuQuery(cafeId: cafeId, menuId: menuId);
 
         // Act

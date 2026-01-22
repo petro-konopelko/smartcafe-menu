@@ -16,6 +16,6 @@ public class CloneMenuCommandValidator : AbstractValidator<CloneMenuCommand>
 
         RuleFor(x => x.NewName)
             .NotEmpty().WithMessage(ValidationMessages.MenuNameRequired)
-            .MaximumLength(200).WithMessage(ValidationMessages.MenuNameMaxLength);
+            .MaximumLength(Domain.Entities.Menu.MaxNameLength).WithMessage(ValidationMessages.MenuNameMaxLength);
     }
 }

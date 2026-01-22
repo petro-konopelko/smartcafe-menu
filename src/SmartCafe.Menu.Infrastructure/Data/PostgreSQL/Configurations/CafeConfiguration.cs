@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SmartCafe.Menu.Domain.Entities;
 
 namespace SmartCafe.Menu.Infrastructure.Data.PostgreSQL.Configurations;
 
-public class CafeConfiguration : IEntityTypeConfiguration<Domain.Entities.Cafe>
+public class CafeConfiguration : IEntityTypeConfiguration<Cafe>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Cafe> builder)
+    public void Configure(EntityTypeBuilder<Cafe> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -16,10 +17,17 @@ public class CafeConfiguration : IEntityTypeConfiguration<Domain.Entities.Cafe>
 
         builder.Property(e => e.Name)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(Cafe.MaxNameLength);
 
         builder.Property(e => e.ContactInfo)
-            .HasMaxLength(500);
+            .HasMaxLength(Cafe.MaxContactInfoLength);
+
+        builder.Property(e => e.IsDeleted)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(e => e.UpdatedAt)
+            .IsRequired(false);
 
         builder.HasIndex(e => e.Name);
 

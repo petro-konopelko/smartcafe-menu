@@ -14,6 +14,7 @@ namespace SmartCafe.Menu.Application.Features.Menus.CloneMenu;
 
 public class CloneMenuHandler(
     IMenuRepository menuRepository,
+    ICafeRepository cafeRepository,
     IUnitOfWork unitOfWork,
     IDomainEventDispatcher eventDispatcher,
     IDateTimeProvider dateTimeProvider,
@@ -24,6 +25,15 @@ public class CloneMenuHandler(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Check cafe exists (not deleted)
+        var cafeExists = await cafeRepository.ExistsActiveAsync(request.CafeId, cancellationToken);
+        if (!cafeExists)
+        {
+            return Result<CreateMenuResponse>.Failure(Error.NotFound(
+                $"Cafe with ID {request.CafeId} not found",
+                CafeErrorCodes.CafeNotFound));
+        }
 
         // Load source menu
         var sourceMenu = await menuRepository.GetByIdAsync(request.SourceMenuId, cancellationToken);

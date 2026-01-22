@@ -12,7 +12,9 @@ namespace SmartCafe.Menu.UnitTests.Application.Menus;
 
 public class CloneMenuHandlerTests
 {
+    private readonly ICafeRepository _cafeRepository = Substitute.For<ICafeRepository>();
     private readonly FakeDateTimeProvider _clock = new();
+    private readonly SequenceGuidIdProvider _guidIdProvider = new();
 
     [Fact]
     public async Task HandleAsync_CreatesClonedMenu_WhenSourceMenuFound()
@@ -27,11 +29,12 @@ public class CloneMenuHandlerTests
         var sourceMenu = MenuTestData.CreateNewMenu(cafeId, new SequenceGuidIdProvider(), _clock);
 
         menuRepository.GetByIdAsync(sourceMenu.Id, Arg.Any<CancellationToken>()).Returns(sourceMenu);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var idProvider = new SequenceGuidIdProvider();
         var expectedClonedMenuId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
-        var handler = new CloneMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock, idProvider);
+        var handler = new CloneMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock, idProvider);
         var command = MenuTestData.CreateCloneMenuCommand(cafeId: cafeId, sourceMenuId: sourceMenu.Id, newName: "Cloned menu");
 
         // Act
@@ -62,8 +65,9 @@ public class CloneMenuHandlerTests
         var sourceMenuId = Guid.NewGuid();
 
         menuRepository.GetByIdAsync(sourceMenuId, Arg.Any<CancellationToken>()).Returns((MenuEntity?)null);
+        _cafeRepository.ExistsActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var handler = new CloneMenuHandler(menuRepository, unitOfWork, eventDispatcher, _clock, new SequenceGuidIdProvider());
+        var handler = new CloneMenuHandler(menuRepository, _cafeRepository, unitOfWork, eventDispatcher, _clock, new SequenceGuidIdProvider());
         var command = MenuTestData.CreateCloneMenuCommand(cafeId: cafeId, sourceMenuId: sourceMenuId);
 
         // Act

@@ -321,6 +321,17 @@ docker run -p 5000:8080 smartcafe-menu:latest
 
 ## 📖 API Documentation
 
+### Cafe Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/cafes` | List all active cafes |
+| POST | `/api/cafes` | Create new cafe |
+| GET | `/api/cafes/{cafeId}` | Get cafe details |
+| DELETE | `/api/cafes/{cafeId}` | Soft delete cafe |
+
+**Note:** All menu operations return 404 when the cafe is soft deleted.
+
 ### Menu Endpoints
 
 | Method | Endpoint | Description |
@@ -333,7 +344,7 @@ docker run -p 5000:8080 smartcafe-menu:latest
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/publish` | Publish menu |
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/activate` | Activate menu |
 | POST | `/api/cafes/{cafeId}/menus/{menuId}/clone` | Clone menu |
-| GET | `/api/cafes/{cafeId}/menu/active` | Get active menu (public) |
+| GET | `/api/cafes/{cafeId}/menus/active` | Get active menu (public) |
 
 See [Swagger UI](http://localhost:5000/swagger) for complete API documentation.
 
