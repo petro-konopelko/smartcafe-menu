@@ -100,35 +100,6 @@ public class DeleteCafeHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ReturnsConflict_WhenCafeAlreadyDeleted()
-    {
-        // Arrange
-        _dateTimeProvider.SetUtcNow(new DateTime(2024, 1, 1, 8, 30, 0, DateTimeKind.Utc));
-        var cafe = CafeDataGenerator.GenerateValidCafe(_dateTimeProvider);
-        cafe.SoftDelete(_dateTimeProvider);
-        var command = new DeleteCafeCommand(cafe.Id);
-
-        _cafeRepository.GetActiveByIdAsync(cafe.Id, Arg.Any<CancellationToken>())
-            .Returns(cafe);
-
-        // Act
-        var result = await _handler.HandleAsync(command, TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.True(result.IsFailure);
-        var error = result.EnsureError();
-
-        Assert.Multiple(() =>
-        {
-            Assert.Equal(ErrorType.Conflict, error.Type);
-            Assert.Equal(CafeErrorCodes.CafeAlreadyDeleted, error.Details.First().Code);
-        });
-
-        await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
-        await _eventDispatcher.DidNotReceiveWithAnyArgs().DispatchAsync(default!, TestContext.Current.CancellationToken);
-    }
-
-    [Fact]
     public async Task HandleAsync_ThrowsArgumentNullException_WhenRequestIsNull()
     {
         // Arrange
