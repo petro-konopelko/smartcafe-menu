@@ -13,7 +13,7 @@ public class SectionDtoValidator : AbstractValidator<SectionDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(ValidationMessages.SectionNameRequired)
-            .MaximumLength(100).WithMessage(ValidationMessages.SectionNameMaxLength);
+            .MaximumLength(Domain.Entities.Section.MaxNameLength).WithMessage(ValidationMessages.SectionNameMaxLength);
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage(ValidationMessages.SectionMustHaveItem)

@@ -6,6 +6,8 @@ namespace SmartCafe.Menu.Domain.ValueObjects;
 
 public class Ingredient
 {
+    public const int MaxNameLength = 100;
+
     public string Name { get; }
     public bool IsExcludable { get; }
 

@@ -17,7 +17,7 @@ public class UpdateMenuCommandValidator : AbstractValidator<UpdateMenuCommand>
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage(ValidationMessages.MenuNameRequired)
-            .MaximumLength(200).WithMessage(ValidationMessages.MenuNameMaxLength);
+            .MaximumLength(Domain.Entities.Menu.MaxNameLength).WithMessage(ValidationMessages.MenuNameMaxLength);
 
         RuleFor(x => x.Sections)
             .NotEmpty().WithMessage(ValidationMessages.MenuMustHaveSection);

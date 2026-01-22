@@ -9,6 +9,9 @@ namespace SmartCafe.Menu.Domain.Entities;
 
 public class Section : Entity
 {
+    public const int MaxNameLength = 100;
+    public const int MaxItemsPerSection = 100;
+
     private readonly List<MenuItem> _items = [];
 
     public Guid MenuId { get; }
@@ -115,9 +118,9 @@ public class Section : Entity
             throw new ArgumentException("UpdatedAt must be a valid date", nameof(utcNow));
         }
 
-        if (items.Count > 100)
+        if (items.Count > MaxItemsPerSection)
         {
-            return Result.Failure(Error.Validation(new ErrorDetail("Section cannot contain more than 100 items", SectionErrorCodes.TooManyItems)));
+            return Result.Failure(Error.Validation(new ErrorDetail($"Section cannot contain more than {MaxItemsPerSection} items", SectionErrorCodes.TooManyItems)));
         }
 
         if (items.HasDuplicateByKey(i => i.Id, id => id.HasValue))
