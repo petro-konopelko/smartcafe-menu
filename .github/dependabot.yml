@@ -54,12 +54,12 @@ updates:
       # Serilog
       serilog:
         patterns:
-        - "Serilog*"
+          - "Serilog*"
 
       # OpenTelemetry packages
       openTelemetry:
         patterns:
-        - "OpenTelemetry*"
+          - "OpenTelemetry*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
