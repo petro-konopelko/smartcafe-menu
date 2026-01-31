@@ -11,6 +11,7 @@ using SmartCafe.Menu.Shared.Providers;
 using SmartCafe.Menu.Shared.Providers.Abstractions;
 
 var testingEnv = "Testing";
+var frontendPolicyName = "FrontEnd";
 
 // https://github.com/serilog/serilog-aspnetcore/issues/289
 // There is a problem with using Serilog's "CreateBootstrapLogger" when trying to initialize a web host.
@@ -53,6 +54,24 @@ try
             new DefaultAzureCredential());
     }
 
+    // Configure CORS
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<Dictionary<string, string>>();
+
+    if (allowedOrigins?.Count > 0)
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(frontendPolicyName, policy =>
+            {
+                policy.WithOrigins([.. allowedOrigins.Values])
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+    }
+
     // Domain services
     builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
     builder.Services.AddSingleton<IGuidIdProvider, GuidIdProvider>();
@@ -79,6 +98,8 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    app.UseCors(frontendPolicyName);
 
     if (!isUpperEnvironment)
     {
