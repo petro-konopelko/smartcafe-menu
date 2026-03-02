@@ -72,7 +72,7 @@ jobs:
             --output ./publish
 
       - name: Upload publish artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: app-package
           path: ./publish
