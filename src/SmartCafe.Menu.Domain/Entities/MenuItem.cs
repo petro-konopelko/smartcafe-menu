@@ -91,7 +91,7 @@ public class MenuItem : Entity
             var priceResult = Price.Create(
                 itemInfo.Price.Amount,
                 itemInfo.Price.Unit,
-                itemInfo.Price.Discount);
+                itemInfo.Price.DiscountPercent);
 
             if (priceResult.IsFailure)
             {

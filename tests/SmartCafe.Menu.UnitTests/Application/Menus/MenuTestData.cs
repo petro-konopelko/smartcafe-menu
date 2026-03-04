@@ -139,7 +139,7 @@ public static class MenuTestData
                         Id: i.Id,
                         Name: i.Name,
                         Description: i.Description,
-                        Price: new PriceDto(i.Price.Amount, i.Price.Unit, i.Price.Discount),
+                        Price: new PriceDto(i.Price.Amount, i.Price.Unit, i.Price.DiscountPercent),
                         Image: i.Image is null || (string.IsNullOrWhiteSpace(i.Image.OriginalPath) && string.IsNullOrWhiteSpace(i.Image.ThumbnailPath))
                             ? null
                             : new MenuItemImageDto(i.Image.OriginalPath!, i.Image.ThumbnailPath!),

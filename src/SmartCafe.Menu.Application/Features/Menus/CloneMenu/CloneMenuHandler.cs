@@ -96,7 +96,7 @@ public class CloneMenuHandler(
         var price = new PriceUpdateInfo(
             item.Price.Amount,
             item.Price.Unit,
-            item.Price.Discount);
+            item.Price.DiscountPercent);
 
         var image = item.Image is null
             ? null

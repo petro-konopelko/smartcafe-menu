@@ -20,9 +20,9 @@ public class MenuItemPriceTests
     [InlineData(0, 0.1, ItemErrorCodes.PriceInvalid)]
     [InlineData(-5, 0.1, ItemErrorCodes.PriceInvalid)]
     [InlineData(10, -0.1, ItemErrorCodes.PriceDiscountInvalid)]
-    [InlineData(10, 1, ItemErrorCodes.PriceDiscountInvalid)]
-    [InlineData(10, 1.5, ItemErrorCodes.PriceDiscountInvalid)]
-    public void Create_ReturnsValidationError_WhenPriceInvalid(decimal amount, decimal discount, string expectedCode)
+    [InlineData(10, 100, ItemErrorCodes.PriceDiscountInvalid)]
+    [InlineData(10, 150, ItemErrorCodes.PriceDiscountInvalid)]
+    public void Create_ReturnsValidationError_WhenPriceInvalid(decimal amount, decimal discountPercent, string expectedCode)
     {
         // Arrange
         var sections = new[]
@@ -36,7 +36,7 @@ public class MenuItemPriceTests
                     null,
                     MenuDataGenerator.GenerateValidItemName(),
                     MenuDataGenerator.GenerateValidProductDescription(),
-                    new PriceUpdateInfo(amount, PriceUnit.PerItem, discount),
+                    new PriceUpdateInfo(amount, PriceUnit.PerItem, discountPercent),
                     null,
                     [])])
         };

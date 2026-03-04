@@ -41,7 +41,7 @@ public static class ValidationMessages
     // Price Validation
     public const string PriceRequired = "Price is required";
     public const string PriceUnitInvalid = "Price unit must be a valid value";
-    public const string DiscountInvalid = "Discount must be between 0 and 1";
+    public const string DiscountPercentInvalid = "Discount percent must be between 0 and 100";
 
     // Ingredient Validation
     public const string IngredientNameRequired = "Ingredient name is required";

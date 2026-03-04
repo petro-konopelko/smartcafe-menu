@@ -31,7 +31,7 @@ public class MenuItemTests
             item.Id,
             invalidName!,
             item.Description,
-            new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.Discount),
+            new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.DiscountPercent),
             null,
             []);
 
@@ -90,8 +90,8 @@ public class MenuItemTests
 
         var duplicateIdItems = new[]
         {
-            new ItemUpdateInfo(firstItem.Id, firstItem.Name, firstItem.Description, new PriceUpdateInfo(firstItem.Price.Amount, firstItem.Price.Unit, firstItem.Price.Discount), null, []),
-            new ItemUpdateInfo(firstItem.Id, secondItem.Name, secondItem.Description, new PriceUpdateInfo(secondItem.Price.Amount, secondItem.Price.Unit, secondItem.Price.Discount), null, [])
+            new ItemUpdateInfo(firstItem.Id, firstItem.Name, firstItem.Description, new PriceUpdateInfo(firstItem.Price.Amount, firstItem.Price.Unit, firstItem.Price.DiscountPercent), null, []),
+            new ItemUpdateInfo(firstItem.Id, secondItem.Name, secondItem.Description, new PriceUpdateInfo(secondItem.Price.Amount, secondItem.Price.Unit, secondItem.Price.DiscountPercent), null, [])
         };
 
         var updatedSection = new SectionUpdateInfo(section.Id, section.Name, null, null, duplicateIdItems);
@@ -121,7 +121,7 @@ public class MenuItemTests
             nonExistentItemId,
             item.Name,
             item.Description,
-            new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.Discount),
+            new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.DiscountPercent),
             null,
             []);
 
@@ -155,7 +155,7 @@ public class MenuItemTests
             item.Id,
             item.Name,
             item.Description,
-                new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.Discount),
+                new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.DiscountPercent),
                 null,
                 [new IngredientItemUpdate(invalidIngredientName!, true)]);
 
@@ -188,7 +188,7 @@ public class MenuItemTests
                 item.Id,
                 item.Name,
                 item.Description,
-                new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.Discount),
+                new PriceUpdateInfo(item.Price.Amount, item.Price.Unit, item.Price.DiscountPercent),
                 invalidImageUpdate,
                 []);
 

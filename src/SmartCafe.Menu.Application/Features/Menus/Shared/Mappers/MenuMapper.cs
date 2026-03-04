@@ -61,7 +61,7 @@ public static class MenuMapper
     {
         ArgumentNullException.ThrowIfNull(price);
 
-        return new PriceDto(price.Amount, price.Unit, price.Discount);
+        return new PriceDto(price.Amount, price.Unit, price.DiscountPercent);
     }
 
     private static MenuItemImageDto? ToImageItemDto(this ImageAsset? image, IImageStorageService imageStorageService)
