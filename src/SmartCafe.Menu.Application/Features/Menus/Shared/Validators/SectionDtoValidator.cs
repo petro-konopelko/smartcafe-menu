@@ -42,17 +42,3 @@ public class SectionDtoForCreateValidator : SectionDtoValidator
         RuleForEach(x => x.Items).SetValidator(new MenuItemDtoForCreateValidator());
     }
 }
-
-/// <summary>
-/// Validator for SectionDto in update scenarios - ID must not be null
-/// </summary>
-public class SectionDtoForUpdateValidator : SectionDtoValidator
-{
-    public SectionDtoForUpdateValidator()
-    {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage(ValidationMessages.SectionIdRequired);
-
-        RuleForEach(x => x.Items).SetValidator(new MenuItemDtoForUpdateValidator());
-    }
-}

@@ -37,9 +37,9 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
                 .HasConversion<int>()
                 .IsRequired();
 
-            price.Property(p => p.Discount)
-                .HasColumnName("PriceDiscount")
-                .HasPrecision(3, 2)
+            price.Property(p => p.DiscountPercent)
+                .HasColumnName("PriceDiscountPercent")
+                .HasPrecision(4, 2)
                 .IsRequired();
         });
 
@@ -81,7 +81,7 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_MenuItems_Price_Positive", "\"PriceAmount\" > 0");
-            t.HasCheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscount\" >= 0 AND \"PriceDiscount\" <= 1");
+            t.HasCheckConstraint("CK_MenuItems_Discount_Valid", "\"PriceDiscountPercent\" >= 0 AND \"PriceDiscountPercent\" < 100");
         });
 
         // Ignore domain events collection (not persisted)

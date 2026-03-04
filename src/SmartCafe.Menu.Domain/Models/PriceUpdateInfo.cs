@@ -8,5 +8,5 @@ namespace SmartCafe.Menu.Domain.Models;
 public record PriceUpdateInfo(
     decimal Amount,
     PriceUnit Unit,
-    decimal Discount
+    decimal DiscountPercent
 );

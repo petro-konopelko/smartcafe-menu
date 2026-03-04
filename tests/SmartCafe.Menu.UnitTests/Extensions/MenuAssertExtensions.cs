@@ -101,7 +101,7 @@ public static class MenuAssertExtensions
         Assert.Multiple(
             () => Assert.Equal(expectedPrice.Amount, price.Amount),
             () => Assert.Equal(expectedPrice.Unit, price.Unit),
-            () => Assert.Equal(expectedPrice.Discount, price.Discount));
+            () => Assert.Equal(expectedPrice.DiscountPercent, price.DiscountPercent));
     }
 
     private static void VerifyImage(

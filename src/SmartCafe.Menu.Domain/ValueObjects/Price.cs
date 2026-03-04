@@ -11,21 +11,21 @@ public sealed record Price
 {
     public decimal Amount { get; init; }
     public PriceUnit Unit { get; init; }
-    public decimal Discount { get; init; }
+    public decimal DiscountPercent { get; init; }
 
     /// <summary>
     /// Gets the final amount after applying discount.
     /// </summary>
-    public decimal FinalAmount => Amount * (1 - Discount);
+    public decimal FinalAmount => Amount * (1 - (DiscountPercent / 100m));
 
-    private Price(decimal amount, PriceUnit unit, decimal discount)
+    private Price(decimal amount, PriceUnit unit, decimal discountPercent)
     {
         Amount = amount;
         Unit = unit;
-        Discount = discount;
+        DiscountPercent = discountPercent;
     }
 
-    internal static Result<Price> Create(decimal amount, PriceUnit unit, decimal discount)
+    internal static Result<Price> Create(decimal amount, PriceUnit unit, decimal discountPercent)
     {
         List<ErrorDetail> errors = [];
 
@@ -34,13 +34,13 @@ public sealed record Price
             errors.Add(new ErrorDetail("Price amount must be greater than zero", ItemErrorCodes.PriceInvalid));
         }
 
-        if (discount < 0 || discount >= 1)
+        if (discountPercent < 0 || discountPercent >= 100)
         {
-            errors.Add(new ErrorDetail("Discount must be between 0 and 1", ItemErrorCodes.PriceDiscountInvalid));
+            errors.Add(new ErrorDetail("Discount must be between 0 and 100", ItemErrorCodes.PriceDiscountInvalid));
         }
 
         return errors.Count > 0
             ? Result<Price>.Failure(Error.Validation(errors))
-            : Result<Price>.Success(new Price(amount, unit, discount));
+            : Result<Price>.Success(new Price(amount, unit, discountPercent));
     }
 }

@@ -38,15 +38,3 @@ public class MenuItemDtoForCreateValidator : MenuItemDtoValidator
             .Null().WithMessage(ValidationMessages.ItemIdMustBeNullForCreate);
     }
 }
-
-/// <summary>
-/// Validator for MenuItemDto in update scenarios - ID must not be null
-/// </summary>
-public class MenuItemDtoForUpdateValidator : MenuItemDtoValidator
-{
-    public MenuItemDtoForUpdateValidator()
-    {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage(ValidationMessages.ItemIdRequired);
-    }
-}

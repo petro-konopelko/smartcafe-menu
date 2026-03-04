@@ -14,7 +14,8 @@ public class PriceDtoValidator : AbstractValidator<PriceDto>
         RuleFor(x => x.Unit)
             .IsInEnum().WithMessage(ValidationMessages.PriceUnitInvalid);
 
-        RuleFor(x => x.Discount)
-            .InclusiveBetween(0, 1).WithMessage(ValidationMessages.DiscountInvalid);
+        RuleFor(x => x.DiscountPercent)
+            .GreaterThanOrEqualTo(0).WithMessage(ValidationMessages.DiscountPercentInvalid)
+            .LessThan(100).WithMessage(ValidationMessages.DiscountPercentInvalid);
     }
 }

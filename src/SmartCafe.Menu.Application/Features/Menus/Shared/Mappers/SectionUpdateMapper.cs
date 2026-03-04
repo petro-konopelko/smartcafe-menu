@@ -41,7 +41,7 @@ public static class SectionUpdateMapper
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var price = new PriceUpdateInfo(dto.Price.Amount, dto.Price.Unit, dto.Price.Discount);
+        var price = new PriceUpdateInfo(dto.Price.Amount, dto.Price.Unit, dto.Price.DiscountPercent);
 
         var image = dto.Image is null
             ? null
