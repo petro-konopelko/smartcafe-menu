@@ -38,7 +38,7 @@ jobs:
           reporttypes: 'MarkdownSummaryGithub'
 
       - name: Add coverage comment to PR
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           path: coveragereport/SummaryGithub.md
 
