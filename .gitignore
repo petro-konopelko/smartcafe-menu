@@ -95,3 +95,6 @@ artifacts/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Claude files
+.claude/settings.local.json
