@@ -68,8 +68,10 @@ dotnet user-secrets set "AzureServiceBus:ConnectionString" "your_servicebus_conn
 
 ### 3. Run with .NET Aspire
 
+The Aspire orchestration host lives in the **[smartcafe-core](https://github.com/petro-konopelko/smartcafe-core)** repository. Clone it alongside this repo and start the AppHost from there:
+
 ```bash
-cd src/SmartCafe.Menu.AppHost
+cd ../smartcafe-core/src/SmartCafe.AppHost
 dotnet run
 ```
 
@@ -117,14 +119,12 @@ smartcafe-menu/
 │   │   ├── EventBus/                    # Azure Service Bus
 │   │   ├── BlobStorage/                 # Azure Blob Storage
 │   │   └── Services/                    # DateTimeProvider, ImageProcessing
-│   ├── SmartCafe.Menu.API/              # Minimal API endpoints
-│   │   ├── Endpoints/                   # Endpoint definitions (use Result extensions)
-│   │   ├── Extensions/                  # Result → HTTP mapping (ToApiResult, ToCreatedResult)
-│   │   ├── Filters/                     # Validation, logging filters
-│   │   ├── Middleware/                  # Exception handling for unexpected errors
-│   │   └── Program.cs                   # Application startup
-│   ├── SmartCafe.Menu.AppHost/          # .NET Aspire orchestration
-│   └── SmartCafe.Menu.ServiceDefaults/  # Shared Aspire config
+│   └── SmartCafe.Menu.API/              # Minimal API endpoints
+│       ├── Endpoints/                   # Endpoint definitions (use Result extensions)
+│       ├── Extensions/                  # Result → HTTP mapping (ToApiResult, ToCreatedResult)
+│       ├── Filters/                     # Validation, logging filters
+│       ├── Middleware/                  # Exception handling for unexpected errors
+│       └── Program.cs                   # Application startup
 ├── tests/
 │   ├── SmartCafe.Menu.UnitTests/
 │   └── SmartCafe.Menu.IntegrationTests/
