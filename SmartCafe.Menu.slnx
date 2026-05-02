@@ -6,7 +6,6 @@
   </Configurations>
   <Folder Name="/src/">
     <Project Path="src/SmartCafe.Menu.API/SmartCafe.Menu.API.csproj" />
-    <Project Path="src/SmartCafe.Menu.AppHost/SmartCafe.Menu.AppHost.csproj" />
     <Project Path="src/SmartCafe.Menu.Application/SmartCafe.Menu.Application.csproj" />
     <Project Path="src/SmartCafe.Menu.Domain/SmartCafe.Menu.Domain.csproj" />
     <Project Path="src/SmartCafe.Menu.Infrastructure/SmartCafe.Menu.Infrastructure.csproj" />
